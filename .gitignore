@@ -1,0 +1,5 @@
+/vendor/
+/logs/*
+!/logs/README.md
+apache2.conf
+composer.lock
