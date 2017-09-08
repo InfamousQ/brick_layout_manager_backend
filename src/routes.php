@@ -1,14 +1,13 @@
 <?php
 // Routes
 
-$app->get('/[{name}]', function ($request, $response, $args) {
-    // Sample log message
-    $this->logger->info("Slim-Skeleton '/' route");
-
-    // Render index view
-    return $this->renderer->render($response, 'index.phtml', $args);
+// "Home page"
+$app->get('/[{name}]', function (Request $request, Response $response, $args) {
+	$response->getBody()->write('Index');
+	return $response;
 });
 
-$app->get('/modules/{id}', \App\ModuleController::class . ':view_single');
+// Module
+$app->get('/modules/{id}', BLMRA\Controller\ModuleController::class . ':view_single');
 
-$app->post('/modules/{id}', \App\ModuleController::class . ':edit_single');
+$app->post('/modules/{id}', BLMRA\Controller\ModuleController::class . ':edit_single');
