@@ -24,6 +24,7 @@
         "psr-4": {
             "BLMRA\\" : "src/",
             "BLMRA\\Controller\\" : "src/controllers",
+            "BLMRA\\Model\\" : "src/models",
             "Tests\\": "tests/"
         }
     },
