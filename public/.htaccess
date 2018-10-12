@@ -1,11 +1,9 @@
 RewriteEngine On
 
-# Some hosts may require you to use the `RewriteBase` directive.
-# If you need to use the `RewriteBase` directive, it should be the
-# absolute physical path to the directory that contains this htaccess file.
-#
-# RewriteBase /
+RewriteRule .* - [env=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond ${REQUEST_FILENAME} !-f
 RewriteRule ^ index.php [QSA,L]
+
+# Make sure $HTTP_RAW_POST_DATA is available
+php_value always_populate_raw_post_data -1
