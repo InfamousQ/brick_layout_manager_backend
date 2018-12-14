@@ -17,16 +17,18 @@ class App {
     private $app;
 
     public function __construct() {
-        $this->app = new \Slim\App(['settings' => ['debug' => true], 'displayErrorDetails' => true]);
+        $app_config = $this->readConfig();
+        $this->app = new \Slim\App($app_config);
 
         // Set DI components
         $container = $this->app->getContainer();
         $container['view'] = function ($container) {
-            $renderer = new Renderer("/var/www/lmanager/src/Templates");
+            $base_folder = $container->get('installation_folder');
+            $renderer = new Renderer($base_folder . 'src/Templates');
             // Add template folders
-            $renderer->addFolder('home', '/var/www/lmanager/src/Templates/home');
-            $renderer->addFolder('user', '/var/www/lmanager/src/Templates/user');
-            $renderer->addFolder('layout', '/var/www/lmanager/src/Templates/layouts');
+            $renderer->addFolder('home', $base_folder . 'src/Templates/home');
+            $renderer->addFolder('user', $base_folder . 'src/Templates/user');
+            $renderer->addFolder('layout', $base_folder . 'src/Templates/layouts');
             return $renderer;
         };
 
@@ -42,11 +44,11 @@ class App {
 
         // API auth
         $this->app->get('/user/token', function (Request $request, Response $response, $args) {
-                return $response->withJson(['token' => 'not_implemented']);
-            })->setName('user_token');
+            return $response->withJson(['token' => 'not_implemented']);
+        })->setName('user_token');
 
         // API resources
-        $this->app->group('/api', function() {
+        $this->app->group('/api', function () {
 
             $this->map(['GET'], '', function (Request $request, Response $response) {
                 return $response->withJson(['message' => 'API GET']);
@@ -66,6 +68,17 @@ class App {
             });
 
         })->add(new JWTAuthenticationMiddleware($this->app->getContainer()));
+    }
+
+    protected function readConfig() {
+        $config = [
+            'settings' => [
+                'debug' => true,
+            ],
+            'displayErrorDetails' => true,
+            'installation_folder' => '/var/www/html/',
+        ];
+        return $config;
     }
 
     /**
