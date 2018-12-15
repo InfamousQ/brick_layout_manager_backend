@@ -1,5 +1,5 @@
+/.idea/
+/.certs/
+/config/social.json
 /vendor/
-/logs/*
-!/logs/README.md
-apache2.conf
 composer.lock
