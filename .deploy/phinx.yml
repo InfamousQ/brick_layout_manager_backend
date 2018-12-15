@@ -1,0 +1,35 @@
+paths:
+    migrations: '/var/www/html/db/migrations'
+    seeds: '/var/www/html/db/seeds'
+
+environments:
+    default_migration_table: phinxlog
+    default_database: development
+    production:
+        adapter: pgsql
+        host: bl_db
+        name: lmanager_prod
+        user: '%%PHINX_DB_USER%%'
+        pass: '%%PHINX_DB_PASS%%'
+        port: 5432
+        charset: utf8
+
+    development:
+        adapter: pgsql
+        host: bl_db
+        name: lmanager_dev
+        user: '%%PHINX_DB_USER%%'
+        pass: '%%PHINX_DB_PASS%%'
+        port: 5432
+        charset: utf8
+
+    testing:
+        adapter: pgsql
+        host: bl_db
+        name: lmanager_test
+        user: '%%PHINX_DB_USER%%'
+        pass: '%%PHINX_DB_PASS%%'
+        port: 5432
+        charset: utf8
+
+version_order: creation

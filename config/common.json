@@ -1,0 +1,7 @@
+{
+  "settings": {
+    "debug": true,
+    "displayErrorDetails": true
+  },
+  "installation_folder": "/var/www/html/"
+}

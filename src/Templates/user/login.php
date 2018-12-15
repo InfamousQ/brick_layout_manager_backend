@@ -1,7 +1,28 @@
-<?php $this->layout('layout::layout_user', ['title' => 'Login']); ?>
+<?php
+    /** @var \Hybridauth\User\Profile $profile */
+    /** @var int $user_id */
+    /** @var \League\Plates\Template\Template $this */
+    $this->layout('layout::layout_user', ['title' => 'Login', 'profile' => $profile, 'user_id' => $user_id]);
+    $this->start('login');
+?>
 <div>
-    <form>
-        <label for="username">Username</label><input id="username" type="text" />
-        <label for="password">Password</label><input id="password" type="password" />
-    </form>
+    <h2>Social networks</h2>
+    <table>
+        <tr>
+            <td><a href="user/authenticate?provider=Facebook"><img src="https://cdnjs.cloudflare.com/ajax/libs/webicons/2.0.0/webicons/webicon-facebook.png"></a></td>
+            <td><a href="user/authenticate?provider=GitHub"><img src="https://cdnjs.cloudflare.com/ajax/libs/webicons/2.0.0/webicons/webicon-github.png" /></a></td>
+        </tr>
+    </table>
 </div>
+<?php
+    $this->stop();
+    $this->start('profile');
+?>
+<div>
+    <p><b>Hello, <?= $this->e($profile->displayName) ?>!</b></p>
+    <p>Your email is <?= $this->e($profile->email) ?></p>
+    <p>Your LManager id is <?= $user_id ?></p>
+    <p><a href="user/logout">Logout</a></p>
+</div>
+
+<?php $this->stop(); ?>
