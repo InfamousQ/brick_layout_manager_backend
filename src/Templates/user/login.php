@@ -9,8 +9,8 @@
     <h2>Social networks</h2>
     <table>
         <tr>
-            <td><a href="user/authenticate?provider=Facebook"><img src="https://cdnjs.cloudflare.com/ajax/libs/webicons/2.0.0/webicons/webicon-facebook.png"></a></td>
-            <td><a href="user/authenticate?provider=GitHub"><img src="https://cdnjs.cloudflare.com/ajax/libs/webicons/2.0.0/webicons/webicon-github.png" /></a></td>
+            <td><a href="api/v1/user/authenticate?provider=Facebook"><img src="https://cdnjs.cloudflare.com/ajax/libs/webicons/2.0.0/webicons/webicon-facebook.png"></a></td>
+            <td><a href="api/v1/user/authenticate?provider=GitHub"><img src="https://cdnjs.cloudflare.com/ajax/libs/webicons/2.0.0/webicons/webicon-github.png" /></a></td>
         </tr>
     </table>
 </div>

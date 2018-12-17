@@ -11,7 +11,7 @@ namespace InfamousQ\LManager\Services;
 
 use Hybridauth\User\Profile;
 
-class UserHandler {
+class UserService {
 
 	/**
 	 * Find id of existing User which has given $email

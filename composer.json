@@ -3,6 +3,7 @@
     "description": "Brick Layout Manager's API",
     "type": "project",
     "require": {
+        "ext-json": "*",
         "slim/slim": "^3.0",
         "firebase/php-jwt": "^5.0",
         "tuupola/base62": "^0.10.0",

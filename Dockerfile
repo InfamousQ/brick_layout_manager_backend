@@ -17,6 +17,10 @@ ADD .deploy/apache-config.conf /etc/apache2/sites-enabled/000-default.conf
 RUN a2enmod rewrite
 RUN a2enmod ssl
 
+# PHP ini
+CMD cp /usr/local/etc/php/php.ini-development /usr/local/etc/php/php.ini
+ADD .deploy/php-dev.ini /usr/local/etc/php/conf.d/xx_lmanager.ini
+
 # Servername config
 CMD echo "ServerName dev.lmanager.test" >> /etc/apache2/conf-available/servername.conf
 CMD a2enconf servername
