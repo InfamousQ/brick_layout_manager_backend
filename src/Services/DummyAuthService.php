@@ -1,6 +1,6 @@
 <?php
 
-namespace InfamousQ\LManager\Middleware;
+namespace InfamousQ\LManager\Services;
 
 
 use Hybridauth\Exception\InvalidArgumentException;
@@ -8,12 +8,12 @@ use Hybridauth\Exception\UnexpectedValueException;
 use InfamousQ\LManager\Util\DummyAdapter;
 use InfamousQ\LManager\Util\RuntimeHybridauthStorage;
 
-class DummyAuthService {
+class DummyAuthService implements AuthenticationServiceInterface {
 
 	public static $callback = '';
 	public static $provider_config = array();
 
-	public function __construct($config) {
+	public function __construct(array $config) {
 		self::$callback = $config['callback'];
 		self::$provider_config = $config['providers'];
 	}
@@ -22,6 +22,8 @@ class DummyAuthService {
 	 * Fetch configuration for given provider $provider_name
 	 * @param string $provider_name
 	 * @return array
+	 * @throws UnexpectedValueException If given $provider_name is found but configuration is not valid
+	 * @throws InvalidArgumentException If given $provider_name is not found from configuration.
 	 */
 	public function getProviderConfig($provider_name) {
 		if (!is_array(self::$provider_config)) {

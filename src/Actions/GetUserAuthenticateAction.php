@@ -8,10 +8,23 @@ use Hybridauth\Exception\UnexpectedValueException;
 use Hybridauth\Hybridauth;
 use Slim\Http\Request;
 use Slim\Http\Response;
+use InfamousQ\LManager\Services\AuthenticationServiceInterface;
 use InfamousQ\LManager\Services\UserService;
 
 class GetUserAuthenticateAction extends AbstractAction {
 
+	/** @var $auth Hybridauth authentication service*/
+	protected $auth;
+
+	public function __construct(AuthenticationServiceInterface $authenticationService) {
+		$this->auth = $authenticationService;
+	}
+
+	/**
+	 * @param Request $request
+	 * @param Response $response
+	 * @return Response
+	 */
 	public function __invoke(Request $request, Response $response) {
 		/** @var string $param_provider Code of the Hybridauth provider to be used */
 		$param_provider = $request->getQueryParam('provider', '');
@@ -22,8 +35,6 @@ class GetUserAuthenticateAction extends AbstractAction {
 		/** @var string $param_error_message Error message */
 		$param_error_message = $request->getQueryParam('error_message', '');
 
-		/** @var Hybridauth $auth */
-		$auth = $this->container->get('auth');
 		$adapter = null;
 
 		// Either provider or token must be in the request!
@@ -34,7 +45,7 @@ class GetUserAuthenticateAction extends AbstractAction {
 		// Check if provided provider code is valid
 		if (!empty($param_provider)) {
 			try {
-				$auth->getProviderConfig($param_provider);
+				$this->auth->getProviderConfig($param_provider);
 			} catch (InvalidArgumentException $invalidArgumentException) {
 				return $response->withStatus(400)->withJson(['error' => ['message' => "Provider '$param_provider' is not found"]]);
 			} catch (UnexpectedValueException $unexpectedValueException) {
@@ -47,7 +58,7 @@ class GetUserAuthenticateAction extends AbstractAction {
 		}
 
 		/** @var AdapterInterface $adapter */
-		$adapter = $auth->authenticate($param_provider);
+		$adapter = $this->auth->authenticate($param_provider);
 		if ($adapter->isConnected()) {
 			$profile = $adapter->getUserProfile();
 			$existing_user_id = UserService::findUserIdByEmail($profile->email);
