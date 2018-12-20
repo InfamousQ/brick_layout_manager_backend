@@ -8,14 +8,12 @@ use InfamousQ\LManager\Actions\GetUserAction;
 use InfamousQ\LManager\Actions\GetUserAuthenticateAction;
 use InfamousQ\LManager\Actions\GetUserLogoutAction;
 use InfamousQ\LManager\Actions\GetUserTokenAction;
-use InfamousQ\LManager\Middleware\DummyAuthService;
-use InfamousQ\LManager\Services\UserService;
+use InfamousQ\LManager\Services\HybridAuthService;
+use InfamousQ\LManager\Services\JWTService;
+use InfamousQ\LManager\Services\PDODatabaseService;
+use Noodlehaus\Config;
 use Slim\Container;
-use \Slim\Http\Request as Request;
-use \Slim\Http\Response as Response;
 use \League\Plates\Engine as Renderer;
-use \Noodlehaus\Config as ConfigReader;
-use \Hybridauth\Hybridauth;
 
 use Firebase\JWT\JWT;
 use Tuupola\Base62;
@@ -48,6 +46,16 @@ class App {
 		// Set DI components
 		$container = $this->app->getContainer();
 
+		// Register DB connection
+		$container['db'] = function (Container $container) {
+			return new PDODatabaseService($container->get('settings')['db']);
+		};
+
+		// Register user service
+		$container['user'] = function (Container $container) {
+			return new Services\UserService($container->get('db'));
+		};
+
 		// Register Plates renderer
 		$container['view'] = function (Container $container) {
 			$base_folder = $container->get('installation_folder');
@@ -59,14 +67,14 @@ class App {
 			return $renderer;
 		};
 
-		// Register HybridAuth
-		$container['auth'] = function () {
-			if (PHP_SAPI === 'cli') {
-				return new DummyAuthService(self::readSocialConfig());
-			} else {
-				;
-				return new Hybridauth(self::readSocialConfig());
-			}
+		// Register authentication service. Use HybridauthService
+		$container['auth'] = function (Container $container) {
+			return new HybridAuthService($container->get('settings')['social']);
+		};
+
+		// Register JWT service.
+		$container['jwt'] = function (Container $container) {
+			return new JWTService($container);
 		};
 	}
 
@@ -96,13 +104,12 @@ class App {
 	}
 
 	protected static function readConfig() {
-		$common_config_reader = ConfigReader::load(__DIR__ . '/../config/common.json');
+		$common_config_reader = new Config([
+			__DIR__ . '/../config/common.json',
+			'?'.__DIR__.'/../config/social.json',
+			'?'.__DIR__.'/../config/db.json',
+		]);
 		return $common_config_reader->all();
-	}
-
-	protected static function readSocialConfig() {
-		$social_config_reader = ConfigReader::load(__DIR__ . '/../config/social.json');
-		return $social_config_reader->all();
 	}
 
 	/**

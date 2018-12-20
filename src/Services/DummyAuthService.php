@@ -12,19 +12,14 @@ class DummyAuthService implements AuthenticationServiceInterface {
 
 	public static $callback = '';
 	public static $provider_config = array();
+	public static $provider_name_storage;
 
 	public function __construct(array $config) {
-		self::$callback = $config['callback'];
-		self::$provider_config = $config['providers'];
+		$authentication_service_config = $config;
+		self::$callback = $authentication_service_config['callback'];
+		self::$provider_config = $authentication_service_config['providers'];
 	}
 
-	/**
-	 * Fetch configuration for given provider $provider_name
-	 * @param string $provider_name
-	 * @return array
-	 * @throws UnexpectedValueException If given $provider_name is found but configuration is not valid
-	 * @throws InvalidArgumentException If given $provider_name is not found from configuration.
-	 */
 	public function getProviderConfig($provider_name) {
 		if (!is_array(self::$provider_config)) {
 			return array();
@@ -39,7 +34,19 @@ class DummyAuthService implements AuthenticationServiceInterface {
 		throw new InvalidArgumentException("Provider '$provider_name' not found'");
 	}
 
-	public function authenticate() {
+	public function getConnectedProviders() {
+		return array_keys(self::$provider_config);
+	}
+
+	public function authenticate($provider_name) {
 		return new DummyAdapter(array(), null, new RuntimeHybridauthStorage());
+	}
+
+	public function setProviderToStorage($provider_name) {
+		self::$provider_name_storage = $provider_name;
+	}
+
+	public function getProviderFromStorage() {
+		return self::$provider_name_storage;
 	}
 }

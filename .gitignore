@@ -1,5 +1,6 @@
 /.idea/
 /.certs/
 /config/social.json
+/config/db.json
 /vendor/
 composer.lock

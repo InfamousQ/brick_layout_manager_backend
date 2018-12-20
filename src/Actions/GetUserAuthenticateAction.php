@@ -5,20 +5,26 @@ namespace InfamousQ\LManager\Actions;
 use Hybridauth\Adapter\AdapterInterface;
 use Hybridauth\Exception\InvalidArgumentException;
 use Hybridauth\Exception\UnexpectedValueException;
-use Hybridauth\Hybridauth;
+use InfamousQ\LManager\Util\Exception;
 use Slim\Http\Request;
 use Slim\Http\Response;
 use InfamousQ\LManager\Services\AuthenticationServiceInterface;
-use InfamousQ\LManager\Services\UserService;
 
 class GetUserAuthenticateAction extends AbstractAction {
 
-	/** @var $auth Hybridauth authentication service*/
+	/** @var $auth AuthenticationServiceInterface authentication service*/
 	protected $auth;
+	protected $jwt;
+	/** @var \Slim\Router $router */
+	protected $router;
+	protected $user_service;
 
-	public function __construct(AuthenticationServiceInterface $authenticationService) {
-		$this->auth = $authenticationService;
-	}
+	public function __construct(\Slim\Container $container) {
+		$this->auth = $container->get('auth');
+		$this->jwt = $container->get('jwt');
+		$this->router = $container->get('router');
+		$this->user_service = $container->get('user');
+ 	}
 
 	/**
 	 * @param Request $request
@@ -30,20 +36,28 @@ class GetUserAuthenticateAction extends AbstractAction {
 		$param_provider = $request->getQueryParam('provider', '');
 		/** @var string $param_token Token parameter generated */
 		$param_token = $request->getQueryParam('token', '');
+		/** @var string $param_code Code generated */
+		$param_code = $request->getQueryParam('code', '');
 		/** @var integer $param_error_code Error code */
 		$param_error_code = $request->getQueryParam('error_code', '');
 		/** @var string $param_error_message Error message */
 		$param_error_message = $request->getQueryParam('error_message', '');
 
+		// When we return from integration, provider parameter is not used anymore. Let's save for short term session memory.
+		if (!empty($param_provider)) {
+			$this->auth->setProviderToStorage($param_provider);
+		}
+
+		/** @var AdapterInterface $adapter */
 		$adapter = null;
 
-		// Either provider or token must be in the request!
-		if (empty($param_provider) && empty($param_token)) {
+		// Either provider, token or code must be in the request!
+		if (empty($param_provider) && empty($param_token) && empty($param_code)) {
 			return $response->withStatus(400)->withJson(['error' => ['message' => 'Missing GET parameters: provider or token']]);
 		}
 
-		// Check if provided provider code is valid
-		if (!empty($param_provider)) {
+		// Check if provided provider code is valid. Required only if code is not given!
+		if (!empty($param_provider) && empty($param_code)) {
 			try {
 				$this->auth->getProviderConfig($param_provider);
 			} catch (InvalidArgumentException $invalidArgumentException) {
@@ -57,67 +71,32 @@ class GetUserAuthenticateAction extends AbstractAction {
 			return $response->withStatus(400)->withJson(['error' => ['message' => "Error code '$param_error_code' - $param_error_message"]]);
 		}
 
-		/** @var AdapterInterface $adapter */
-		$adapter = $this->auth->authenticate($param_provider);
-		if ($adapter->isConnected()) {
-			$profile = $adapter->getUserProfile();
-			$existing_user_id = UserService::findUserIdByEmail($profile->email);
-			if (false == $existing_user_id) {
-				$new_user_id = UserService::createUserForProfile($profile);
-				if (false == $new_user_id) {
-					return $response->withStatus(501)->withJson(['error' => ['message' => 'Could not generate new user']]);
-				}
+		try {
+			$param_provider = $this->auth->getProviderFromStorage();
+			if (empty($param_provider)) {
+				throw new Exception('Could not retrieve provider from memory');
 			}
+
+			$adapter = $this->auth->authenticate($param_provider);
+			if ($adapter->isConnected()) {
+				$profile = $adapter->getUserProfile();
+				// Check if user exists. If not, try to generate new user
+				$existing_user_id = $this->user_service->findUserIdByEmail($profile->email);
+				if (false == $existing_user_id) {
+					$new_user_id = $this->user_service->createUserForProfile($profile);
+					if (false == $new_user_id) {
+						return $response->withStatus(501)->withJson(['error' => ['message' => 'Could not generate new user']]);
+					}
+					$existing_user_id = $new_user_id;
+				}
+				// User is generated, generate JWT token
+				$token = $this->jwt->generateToken($existing_user_id);
+				return $response->withRedirect('/user/token/?token=' . $token, 303);
+			}
+			throw new Exception('Could not authenticate');
+		} catch (\Exception $e) {
+			var_dump($e->getMessage());exit();
+			return $response->withStatus(500)->withJson(['error' => ['message' => "Authentication error: " . $e->getMessage()]]);
 		}
-		return $response->withStatus(500);
 	}
 }
-
-
-// 3rd party social service login
-/* $this->app->get('/user/authenticate', function (Request $request, Response $response) {
-			$param_provider = $request->getQueryParam('provider', '');
-			$param_error_code = $request->getQueryParam('error_code', 0);
-			$param_error_msg = $request->getQueryParam('error_message', '');
-
-			$storage = new Session();
-			if (!empty($param_provider)) {
-				$storage->set('provider', $param_provider);
-			}
-
-			if ($param_error_code > 0) {
-				// TODO: Add proper template
-				echo "Authentication error: $param_error_code <br><br> $param_error_msg <br><br> <a href='/user/authenticate'>Try again</a>";
-				exit();
-			}
-
-			try {
-				if ($provider = $storage->get('provider')) {
-					$adapter = $this->auth->authenticate($provider);
-					if ($adapter->isConnected()) {
-						// Check if user exists and create if not
-						$profile = $adapter->getUserProfile();
-						$existing_user_id = UserService::findUserId            		ByEmail($profile->email);
-						if (false == $existing_user_id) {
-							$new_user_id = UserService::createUserForProfile($profile);
-							if (false == $new_user_id) {
-								// TODO: handle failure
-								error_log('Could not generate new user for');
-							}
-						}
-						$storage->set('provider', null);
-						return $response->withRedirect('/user');
-					}
-				}
-				// TODO: Throw error
-				echo "Authentication error: Provider not saved to session correctly".PHP_EOL;
-			} catch (InvalidArgumentException $e) {
-				// TODO: Add error logging
-				echo "Authentication error: Provider $param_provider is not configured".PHP_EOL;
-			} catch (InvalidAuthorizationStateException $e) {
-				return $response->withRedirect('/');
-			}
-			return $response->withRedirect('/');
-
-		})->setName('auth_callback');
-*/
