@@ -9,15 +9,10 @@ use InfamousQ\LManager\Actions\GetUserAuthenticateAction;
 use InfamousQ\LManager\Actions\GetUserLogoutAction;
 use InfamousQ\LManager\Actions\GetUserTokenAction;
 use InfamousQ\LManager\Services\HybridAuthService;
-use InfamousQ\LManager\Services\JWTService;
 use InfamousQ\LManager\Services\PDODatabaseService;
 use Noodlehaus\Config;
 use Slim\Container;
 use \League\Plates\Engine as Renderer;
-
-use Firebase\JWT\JWT;
-use Tuupola\Base62;
-use Tuupola\Middleware\JwtAuthentication;
 
 
 /**
@@ -71,11 +66,6 @@ class App {
 		$container['auth'] = function (Container $container) {
 			return new HybridAuthService($container->get('settings')['social']);
 		};
-
-		// Register JWT service.
-		$container['jwt'] = function (Container $container) {
-			return new JWTService($container);
-		};
 	}
 
 	protected function setRoutes() {
@@ -83,12 +73,12 @@ class App {
 		$this->app->get('/', GetHomepageAction::class);
 
 		// User login
-		$this->app->get('/user',GetUserAction::class)->setName('user_profile');
+		$this->app->get('/user',GetUserAction::class);
 
-		$this->app->get('/user/logout', GetUserLogoutAction::class)->setName('auth_logout');
+		$this->app->get('/user/logout', GetUserLogoutAction::class);
 
 		// API auth
-		$this->app->get('/user/token', GetUserTokenAction::class)->setName('user_token');
+		$this->app->get('/user/token', GetUserTokenAction::class);
 
 		// API resources
 		$this->app->group('/api/v1', function () {

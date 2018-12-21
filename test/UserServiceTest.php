@@ -13,24 +13,25 @@ class UserServiceTest extends \PHPUnit\Framework\TestCase {
 	public function setUp(){
 		$app = new \Phinx\Console\PhinxApplication();
 		$app->setAutoExit(false);
-		$app->run(new \Symfony\Component\Console\Input\StringInput(' '), new \Symfony\Component\Console\Output\NullOutput());
 
-		self::$T = new TextWrapper($app, array('configuration' => '.deploy/phinx.php'));
+		self::$T = new TextWrapper($app);
+		self::$T->setOption('configuration', '.deploy/phinx.php');
 		self::$T->getMigrate("test");
 
 		$db_settings = [
 			'host' => 'bl_db',
 			'port' => 5432,
 			'dbname' => 'lmanager_test',
-			'user' => 'bl_test',
-			'password' => 'test',
+			'user' => getenv('PHINX_TEST_DB_USER'),
+			'password' => getenv('PHINX_TEST_DB_PASS'),
 		];
 		$test_db_service = new \InfamousQ\LManager\Services\PDODatabaseService($db_settings);
 		$this->user_service = new UserService($test_db_service);
 	}
 
 	public function tearDown(){
-		self::$T->getRollback("test");
+		self::$T->setOption('configuration', '.deploy/phinx.php');
+		self::$T->getRollback("test", 0);
 	}
 
 	public function testRetrievingNonExistingEmailReturnsFalse() {

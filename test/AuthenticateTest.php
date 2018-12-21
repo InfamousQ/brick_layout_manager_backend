@@ -53,9 +53,6 @@ class AuthenticateTest extends \PHPUnit\Framework\TestCase {
 		$container['auth'] = function($container) {
 			return new \InfamousQ\LManager\Services\DummyAuthService($container->get('settings')['social']);
 		};
-		$container['jwt'] = function() {
-			return new \InfamousQ\LManager\Services\DummyJWTService();
-		};
 		$this->container = $container;
 	}
 
@@ -119,10 +116,10 @@ class AuthenticateTest extends \PHPUnit\Framework\TestCase {
 
 		$response = $action($request, $response);
 		$this->assertSame($response->getStatusCode(), 400);
-		$this->assertJsonStringEqualsJsonString((string) $response->getBody(), json_encode(['error' => ['message' => "Error code '' - error_occured"]]));
+		$this->assertJsonStringEqualsJsonString(json_encode(['error' => ['message' => "Error code '' - error_occured"]]), (string) $response->getBody());
 	}
 
-	public function testSuccessfulAuthenticationReturns303RedirectWithToken() {
+	public function testSuccessfulAuthenticationReturns200WithToken() {
 		$this->container->get('auth')->setProviderToStorage('test_provider');
 		$action = new \InfamousQ\LManager\Actions\GetUserAuthenticateAction($this->container);
 		$env = Environment::mock([
@@ -134,8 +131,8 @@ class AuthenticateTest extends \PHPUnit\Framework\TestCase {
 		$response = new \Slim\Http\Response();
 
 		$response = $action($request, $response);
-		$this->assertTrue($response->isRedirect());
-		$this->assertSame('/user/token/?token=JWT_DUMMY_TOKEN', $response->getHeader('Location')[0]);
+		$this->assertSame(200, $response->getStatusCode());
+		$this->assertJsonStringEqualsJsonString(json_encode(['data' => ['token' => 'OAUTH_DUMMY_TOKEN']]), (string) $response->getBody());
 	}
 
 }

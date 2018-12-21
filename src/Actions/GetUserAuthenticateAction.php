@@ -9,19 +9,18 @@ use InfamousQ\LManager\Util\Exception;
 use Slim\Http\Request;
 use Slim\Http\Response;
 use InfamousQ\LManager\Services\AuthenticationServiceInterface;
+use Slim\Http\StatusCode;
 
-class GetUserAuthenticateAction extends AbstractAction {
+class GetUserAuthenticateAction {
 
 	/** @var $auth AuthenticationServiceInterface authentication service*/
 	protected $auth;
-	protected $jwt;
 	/** @var \Slim\Router $router */
 	protected $router;
 	protected $user_service;
 
 	public function __construct(\Slim\Container $container) {
 		$this->auth = $container->get('auth');
-		$this->jwt = $container->get('jwt');
 		$this->router = $container->get('router');
 		$this->user_service = $container->get('user');
  	}
@@ -89,13 +88,13 @@ class GetUserAuthenticateAction extends AbstractAction {
 					}
 					$existing_user_id = $new_user_id;
 				}
-				// User is generated, generate JWT token
-				$token = $this->jwt->generateToken($existing_user_id);
-				return $response->withRedirect('/user/token/?token=' . $token, 303);
+				// User is generated, update access_token and return to user
+				$access_token = $adapter->getAccessToken()['access_token'];
+				$this->user_service->saveAccessTokenForUser($access_token, $this->auth->getProviderType($param_provider), $existing_user_id);
+				return $response->withStatus(StatusCode::HTTP_OK)->withJson(['data' => ['token' => $access_token]]);
 			}
 			throw new Exception('Could not authenticate');
 		} catch (\Exception $e) {
-			var_dump($e->getMessage());exit();
 			return $response->withStatus(500)->withJson(['error' => ['message' => "Authentication error: " . $e->getMessage()]]);
 		}
 	}

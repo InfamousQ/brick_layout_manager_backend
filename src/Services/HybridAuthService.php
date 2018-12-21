@@ -6,7 +6,7 @@ use Hybridauth\Hybridauth;
 use Hybridauth\Storage\Session;
 
 
-class HybridAuthService implements AuthenticationServiceInterface {
+class HybridAuthService extends BaseAuthenticationService {
 
 	/** @var $hybridauth Hybridauth instance*/
 	protected $hybridauth;
@@ -31,6 +31,10 @@ class HybridAuthService implements AuthenticationServiceInterface {
 
 	public function authenticate($provider_name) {
 		return $this->hybridauth->authenticate($provider_name);
+	}
+
+	public function getAdapter($provider_name) {
+		return $this->hybridauth->getAdapter($provider_name);
 	}
 
 	public function setProviderToStorage($provider_name) {

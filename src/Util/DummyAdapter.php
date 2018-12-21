@@ -36,4 +36,10 @@ class DummyAdapter extends AbstractAdapter {
 		$dummy_profile->email = 'dummy@lmanager.test';
 		return $dummy_profile;
 	}
+
+	public function getAccessToken() {
+		return [
+			'access_token' => 'OAUTH_DUMMY_TOKEN',
+		];
+	}
 }

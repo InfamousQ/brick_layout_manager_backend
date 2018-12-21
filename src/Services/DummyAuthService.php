@@ -8,7 +8,7 @@ use Hybridauth\Exception\UnexpectedValueException;
 use InfamousQ\LManager\Util\DummyAdapter;
 use InfamousQ\LManager\Util\RuntimeHybridauthStorage;
 
-class DummyAuthService implements AuthenticationServiceInterface {
+class DummyAuthService extends BaseAuthenticationService {
 
 	public static $callback = '';
 	public static $provider_config = array();
@@ -39,6 +39,10 @@ class DummyAuthService implements AuthenticationServiceInterface {
 	}
 
 	public function authenticate($provider_name) {
+		return new DummyAdapter(array(), null, new RuntimeHybridauthStorage());
+	}
+
+	public function getAdapter($provider_name) {
 		return new DummyAdapter(array(), null, new RuntimeHybridauthStorage());
 	}
 

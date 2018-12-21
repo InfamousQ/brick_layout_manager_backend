@@ -20,8 +20,15 @@ interface AuthenticationServiceInterface {
 	public function getProviderConfig($provider_name);
 
 	/**
-	 * Fetch Adapter that matches given $provider_name service.
-	 * @param $provider_name
+	 * Fetch Adapter that matches given $provider_name
+	 * @param string $provider_name
+	 * @return AbstractAdapter
+	 */
+	public function getAdapter($provider_name);
+
+	/**
+	 * Fetch Adapter that matches given $provider_name service and authenticate user.
+	 * @param string $provider_name
 	 * @return AbstractAdapter
 	 */
 	public function authenticate($provider_name);
@@ -42,5 +49,4 @@ interface AuthenticationServiceInterface {
 	 * @return string Provider's name read from storage
 	 */
 	public function getProviderFromStorage();
-
 }
