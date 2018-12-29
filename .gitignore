@@ -2,5 +2,6 @@
 /.certs/
 /config/social.json
 /config/db.json
+/config/jwt.json
 /vendor/
 composer.lock

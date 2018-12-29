@@ -2,17 +2,20 @@
 
 namespace InfamousQ\LManager;
 
+use Firebase\JWT\JWT;
 use InfamousQ\LManager\Actions\GetHomepageAction;
 use InfamousQ\LManager\Actions\GetPingAction;
-use InfamousQ\LManager\Actions\GetUserAction;
 use InfamousQ\LManager\Actions\GetUserAuthenticateAction;
 use InfamousQ\LManager\Actions\GetUserLogoutAction;
 use InfamousQ\LManager\Actions\GetUserTokenAction;
+use InfamousQ\LManager\Actions\GetAPIUserAction;
 use InfamousQ\LManager\Services\HybridAuthService;
+use InfamousQ\LManager\Services\JWTService;
 use InfamousQ\LManager\Services\PDODatabaseService;
 use Noodlehaus\Config;
 use Slim\Container;
 use \League\Plates\Engine as Renderer;
+use Slim\Http\Response;
 
 
 /**
@@ -21,13 +24,12 @@ use \League\Plates\Engine as Renderer;
  * @property $view Renderer Current Plates renderer
  */
 class App {
-	const MODE_TEST = 1;
-	const MODE_PROD = 2;
 
 	/** @var $app \Slim\App Current instance of the Slim application */
 	private $app;
 
 	public function __construct() {
+		JWT::$leeway = 10;
 		error_reporting(-1);
 		ini_set('display_errors', 1);
 		$app_config = self::readConfig();
@@ -66,6 +68,11 @@ class App {
 		$container['auth'] = function (Container $container) {
 			return new HybridAuthService($container->get('settings')['social']);
 		};
+
+		// Register token service. Use JWTService
+		$container['jwt'] = function (Container $container) {
+			return new JWTService($container->get('settings')['jwt'], $container->get('user'));
+		};
 	}
 
 	protected function setRoutes() {
@@ -73,12 +80,11 @@ class App {
 		$this->app->get('/', GetHomepageAction::class);
 
 		// User login
-		$this->app->get('/user',GetUserAction::class);
-
-		$this->app->get('/user/logout', GetUserLogoutAction::class);
-
-		// API auth
+		$this->app->get('/user/authenticate', GetUserAuthenticateAction::class);
+		// User token
 		$this->app->get('/user/token', GetUserTokenAction::class);
+		// User logout
+		$this->app->get('/user/logout', GetUserLogoutAction::class);
 
 		// API resources
 		$this->app->group('/api/v1', function () {
@@ -86,11 +92,20 @@ class App {
 			$this->get('/ping', GetPingAction::class);
 
 			$this->group('/user', function () {
-
-				$this->get('/authenticate', GetUserAuthenticateAction::class);
+				$this->get('/', GetAPIUserAction::class);
 			});
 
-		});
+		})->add(new \Tuupola\Middleware\JwtAuthentication([
+			'secret' => $this->app->getContainer()->get('settings')['jwt']['key'],
+			'ignore' => ['/api/v1/ping'],
+			"error" => function (Response $response, $arguments) {
+				$data["status"] = "error";
+				$data["message"] = $arguments["message"];
+				return $response
+					->withHeader("Content-Type", "application/json")
+					->withJson($data);
+			}
+		]));
 	}
 
 	protected static function readConfig() {
@@ -98,6 +113,7 @@ class App {
 			__DIR__ . '/../config/common.json',
 			'?'.__DIR__.'/../config/social.json',
 			'?'.__DIR__.'/../config/db.json',
+			'?'.__DIR__.'/../config/jwt.json',
 		]);
 		return $common_config_reader->all();
 	}

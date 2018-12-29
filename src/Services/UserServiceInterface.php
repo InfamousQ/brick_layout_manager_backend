@@ -16,6 +16,13 @@ interface UserServiceInterface {
 	public function findUserIdByEmail($email);
 
 	/**
+	 * Get existing User for given $user_id
+	 * @param int $user_id
+	 * @return \InfamousQ\LManager\Models\User User data
+	 */
+	public function getUserById($user_id);
+
+	/**
 	 * Verify that given user id exists
 	 * @param int $user_id User id to check
 	 * @return boolean Does given $user_id exist?

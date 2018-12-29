@@ -6,9 +6,15 @@ use Slim\Http\Request;
 use Slim\Http\Response;
 
 class GetUserTokenAction {
+	/** @var \League\Plates\Engine $view */
+	protected $view;
+
+	public function __construct(\Slim\Container $container) {
+		$this->view = $container->get('view');
+	}
 
 	public function __invoke(Request $request, Response $response) {
-		return $response->withJson(['token' => 'not_implemented']);
+		return $this->view->render('user::token');
 	}
 
 }

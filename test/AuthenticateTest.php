@@ -43,6 +43,7 @@ class AuthenticateTest extends \PHPUnit\Framework\TestCase {
 				'user' => 'bl_test',
 				'password' => 'test',
 			],
+			'jwt' => [],
 		];
 		$container['db'] = function($container) {
 			return new \InfamousQ\LManager\Services\PDODatabaseService($container->get('settings')['db']);
@@ -52,6 +53,9 @@ class AuthenticateTest extends \PHPUnit\Framework\TestCase {
 		};
 		$container['auth'] = function($container) {
 			return new \InfamousQ\LManager\Services\DummyAuthService($container->get('settings')['social']);
+		};
+		$container['jwt'] = function($container) {
+			return new \InfamousQ\LManager\Services\DummyJWTService($container->get('settings')['jwt'], $container->get('user'));
 		};
 		$this->container = $container;
 	}
@@ -64,7 +68,7 @@ class AuthenticateTest extends \PHPUnit\Framework\TestCase {
 		$action = new \InfamousQ\LManager\Actions\GetUserAuthenticateAction($this->container);
 		$env = Environment::mock([
 			'REQUEST_METHOD'    => 'GET',
-			'REQUEST_URI'       => '/api/v1/user/authenticate',
+			'REQUEST_URI'       => '/user/authenticate',
 		]);
 		$request = Request::createFromEnvironment($env);
 		$response = new \Slim\Http\Response();
@@ -78,7 +82,7 @@ class AuthenticateTest extends \PHPUnit\Framework\TestCase {
 		$action = new \InfamousQ\LManager\Actions\GetUserAuthenticateAction($this->container);
 		$env = Environment::mock([
 			'REQUEST_METHOD'    => 'GET',
-			'REQUEST_URI'       => '/api/v1/user/authenticate',
+			'REQUEST_URI'       => '/user/authenticate',
 			'QUERY_STRING'      => 'provider=faulty'
 		]);
 		$request = Request::createFromEnvironment($env);
@@ -93,7 +97,7 @@ class AuthenticateTest extends \PHPUnit\Framework\TestCase {
 		$action = new \InfamousQ\LManager\Actions\GetUserAuthenticateAction($this->container);
 		$env = Environment::mock([
 			'REQUEST_METHOD'    => 'GET',
-			'REQUEST_URI'       => '/api/v1/user/authenticate',
+			'REQUEST_URI'       => '/user/authenticate',
 			'QUERY_STRING'      => 'provider=test_provider&error_code=123'
 		]);
 		$request = Request::createFromEnvironment($env);
@@ -108,7 +112,7 @@ class AuthenticateTest extends \PHPUnit\Framework\TestCase {
 		$action = new \InfamousQ\LManager\Actions\GetUserAuthenticateAction($this->container);
 		$env = Environment::mock([
 			'REQUEST_METHOD'    => 'GET',
-			'REQUEST_URI'       => '/api/v1/user/authenticate',
+			'REQUEST_URI'       => '/user/authenticate',
 			'QUERY_STRING'      => 'provider=test_provider&error_message=error_occured'
 		]);
 		$request = Request::createFromEnvironment($env);
@@ -124,15 +128,15 @@ class AuthenticateTest extends \PHPUnit\Framework\TestCase {
 		$action = new \InfamousQ\LManager\Actions\GetUserAuthenticateAction($this->container);
 		$env = Environment::mock([
 			'REQUEST_MEHOD'     => 'GET',
-			'REQUEST_URI'       => '/api/v1/user/authenticate',
+			'REQUEST_URI'       => '/user/authenticate',
 			'QUERY_STRING'      => 'code=AUTHENTICATION_OK&state=APP_STATE_OK',
 		]);
 		$request = Request::createFromEnvironment($env);
 		$response = new \Slim\Http\Response();
 
 		$response = $action($request, $response);
-		$this->assertSame(200, $response->getStatusCode());
-		$this->assertJsonStringEqualsJsonString(json_encode(['data' => ['token' => 'OAUTH_DUMMY_TOKEN']]), (string) $response->getBody());
+		$this->assertSame(302, $response->getStatusCode());
+		$this->assertSame('/user/token?token=DUMMY_JWT_TOKEN', $response->getHeader('Location')[0]);
 	}
 
 }

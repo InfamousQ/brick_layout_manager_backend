@@ -34,6 +34,12 @@ interface AuthenticationServiceInterface {
 	public function authenticate($provider_name);
 
 	/**
+	 * Disconnect current user from all connected adapters
+	 * @return boolean Was disconnection successful?
+	 */
+	public function disconnectAllAdapters();
+
+	/**
 	 * Get names of all connected providers
 	 * @return string[]
 	 */

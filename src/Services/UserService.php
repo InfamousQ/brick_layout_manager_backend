@@ -4,6 +4,7 @@ namespace InfamousQ\LManager\Services;
 
 
 use Hybridauth\User\Profile;
+use InfamousQ\LManager\Models\User;
 
 class UserService implements UserServiceInterface {
 
@@ -37,6 +38,18 @@ class UserService implements UserServiceInterface {
 			$pdo->rollBack();
 			return false;
 		}
+	}
+
+	public function getUserById($user_id) {
+		$pdo = $this->db->getPDO();
+		$stmt = $pdo->prepare('SELECT id, name, email FROM public.user WHERE id = :user_id');
+		$stmt->execute(array(':user_id' => $user_id));
+		$db_user_data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+		if (count($db_user_data) !== 1) {
+			return new User();
+		}
+		$user_data = reset($db_user_data);
+		return new User($user_data['id'], $user_data['name'], $user_data['email']);
 	}
 
 	/**

@@ -8,21 +8,23 @@ use Hybridauth\Exception\UnexpectedValueException;
 use InfamousQ\LManager\Util\Exception;
 use Slim\Http\Request;
 use Slim\Http\Response;
-use InfamousQ\LManager\Services\AuthenticationServiceInterface;
-use Slim\Http\StatusCode;
 
 class GetUserAuthenticateAction {
 
-	/** @var $auth AuthenticationServiceInterface authentication service*/
+	/** @var \InfamousQ\LManager\Services\BaseAuthenticationService $auth authentication service*/
 	protected $auth;
 	/** @var \Slim\Router $router */
 	protected $router;
+	/** @var \InfamousQ\LManager\Services\UserServiceInterface $user_service*/
 	protected $user_service;
+	/** @var \InfamousQ\LManager\Services\TokenServiceInterface $jwt_service */
+	protected $jwt_service;
 
 	public function __construct(\Slim\Container $container) {
 		$this->auth = $container->get('auth');
 		$this->router = $container->get('router');
 		$this->user_service = $container->get('user');
+		$this->jwt_service = $container->get('jwt');
  	}
 
 	/**
@@ -91,7 +93,7 @@ class GetUserAuthenticateAction {
 				// User is generated, update access_token and return to user
 				$access_token = $adapter->getAccessToken()['access_token'];
 				$this->user_service->saveAccessTokenForUser($access_token, $this->auth->getProviderType($param_provider), $existing_user_id);
-				return $response->withStatus(StatusCode::HTTP_OK)->withJson(['data' => ['token' => $access_token]]);
+				return $response->withRedirect($request->getUri()->getBasePath() . '/user/token?token=' . $this->jwt_service->generateUserToken($existing_user_id));
 			}
 			throw new Exception('Could not authenticate');
 		} catch (\Exception $e) {

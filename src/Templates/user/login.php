@@ -7,10 +7,10 @@
 ?>
 <div>
     <h2>Social networks</h2>
-    <table>
+    <table id="authenticate-social-plugins" data-authentication-url="api/v1/user/authenticate">
         <tr>
-            <td><a href="api/v1/user/authenticate?provider=Facebook"><img src="https://cdnjs.cloudflare.com/ajax/libs/webicons/2.0.0/webicons/webicon-facebook.png"></a></td>
-            <td><a href="api/v1/user/authenticate?provider=GitHub"><img src="https://cdnjs.cloudflare.com/ajax/libs/webicons/2.0.0/webicons/webicon-github.png" /></a></td>
+            <td><a class="authentication-social-plugin-link" href="#" data-social-plugin="Facebook"><img alt="Login with Facebook" src="https://cdnjs.cloudflare.com/ajax/libs/webicons/2.0.0/webicons/webicon-facebook.png"></a></td>
+            <td><a class="authentication-social-plugin-link" href="#" data-social-plugin="Github"><img alt="Login with Github" src="https://cdnjs.cloudflare.com/ajax/libs/webicons/2.0.0/webicons/webicon-github.png" /></a></td>
         </tr>
     </table>
 </div>
@@ -26,3 +26,5 @@
 </div>
 
 <?php $this->stop(); ?>
+
+

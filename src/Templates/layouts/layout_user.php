@@ -2,6 +2,7 @@
     /** @var \League\Plates\Template\Template $this */
     /** @var \Hybridauth\User\Profile $profile */
 ?>
+<!DOCTYPE HTML>
 <html>
 <head>
     <title><?= $this->e($title) ?></title>

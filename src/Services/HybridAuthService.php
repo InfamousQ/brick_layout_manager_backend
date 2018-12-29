@@ -33,6 +33,11 @@ class HybridAuthService extends BaseAuthenticationService {
 		return $this->hybridauth->authenticate($provider_name);
 	}
 
+	public function disconnectAllAdapters() {
+		$this->hybridauth->disconnectAllAdapters();
+		return true;
+	}
+
 	public function getAdapter($provider_name) {
 		return $this->hybridauth->getAdapter($provider_name);
 	}

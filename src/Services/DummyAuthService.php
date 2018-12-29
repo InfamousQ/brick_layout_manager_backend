@@ -42,6 +42,10 @@ class DummyAuthService extends BaseAuthenticationService {
 		return new DummyAdapter(array(), null, new RuntimeHybridauthStorage());
 	}
 
+	public function disconnectAllAdapters() {
+		return true;
+	}
+
 	public function getAdapter($provider_name) {
 		return new DummyAdapter(array(), null, new RuntimeHybridauthStorage());
 	}
