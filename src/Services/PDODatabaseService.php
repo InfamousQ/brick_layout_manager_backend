@@ -2,10 +2,8 @@
 
 namespace InfamousQ\LManager\Services;
 
-use \Pb\PDO\Database as Database;
-
 class PDODatabaseService implements DatabaseServiceInterface {
-	/** @var Database Current PDO instance */
+	/** @var \PDO Current PDO instance */
 	protected static $pdo_instance;
 
 	protected static $pdo_dsn_string = '';
@@ -24,7 +22,7 @@ class PDODatabaseService implements DatabaseServiceInterface {
 
 	/**
 	 * Get current PDO instance
-	 * @return Database
+	 * @return \PDO
 	 */
 	public static function getInstance() {
 		if (null == self::$pdo_instance) {
@@ -34,7 +32,7 @@ class PDODatabaseService implements DatabaseServiceInterface {
 	}
 
 	protected static function initializePDO() {
-		self::$pdo_instance =  new Database(self::$pdo_dsn_string, self::$user, self::$password);
+		self::$pdo_instance =  new \PDO(self::$pdo_dsn_string, self::$user, self::$password);
 		return self::$pdo_instance;
 	}
 }

@@ -7,7 +7,7 @@ interface DatabaseServiceInterface {
 	public function __construct(array $config);
 
 	/**
-	 * @return \Pb\PDO\Database
+	 * @return \PDO
 	 */
 	public function getPDO();
 }

@@ -33,7 +33,7 @@ class UserService implements UserServiceInterface {
 			$new_user_id = $stmt->fetchColumn();
 			$pdo->commit();
 			return (int) $new_user_id;
-		} catch (\PDOException $PDOException) {
+		} catch (\PDOException $PDOException) {
 			error_log($PDOException->getMessage());
 			$pdo->rollBack();
 			return false;
@@ -49,7 +49,7 @@ class UserService implements UserServiceInterface {
 			return new User();
 		}
 		$user_data = reset($db_user_data);
-		return new User($user_data['id'], $user_data['name'], $user_data['email']);
+		return new User($user_data['id'], $user_data['email'], $user_data['name']);
 	}
 
 	/**

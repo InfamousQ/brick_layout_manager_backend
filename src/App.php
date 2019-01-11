@@ -92,7 +92,7 @@ class App {
 			$this->get('/ping', GetPingAction::class);
 
 			$this->group('/user', function () {
-				$this->get('/', GetAPIUserAction::class);
+				$this->get('/[{id}]', GetAPIUserAction::class);
 			});
 
 		})->add(new \Tuupola\Middleware\JwtAuthentication([

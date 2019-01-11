@@ -13,4 +13,8 @@ class User {
 		$this->email = $email;
 		$this->name = $name;
 	}
+
+	public function getData() {
+		return ['id' => $this->id, 'name' => $this->name, 'href' => '/api/v1/users/' . $this->id . '/', 'modules' => [], 'layouts' => []];
+	}
 }
