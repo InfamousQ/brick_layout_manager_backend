@@ -2,90 +2,128 @@
 
 namespace InfamousQ\LManager;
 
-use InfamousQ\LManager\Middleware\JWTAuthenticationMiddleware;
-use \Psr\Http\Message\ServerRequestInterface as Request;
-use \Psr\Http\Message\ResponseInterface as Response;
-use \League\Plates\Engine as Renderer;
-
 use Firebase\JWT\JWT;
-use Tuupola\Base62;
-use Tuupola\Middleware\JwtAuthentication;
+use InfamousQ\LManager\Actions\GetHomepageAction;
+use InfamousQ\LManager\Actions\GetPingAction;
+use InfamousQ\LManager\Actions\GetUserAuthenticateAction;
+use InfamousQ\LManager\Actions\GetUserLogoutAction;
+use InfamousQ\LManager\Actions\GetUserTokenAction;
+use InfamousQ\LManager\Actions\APIUserAction;
+use InfamousQ\LManager\Services\HybridAuthService;
+use InfamousQ\LManager\Services\JWTService;
+use InfamousQ\LManager\Services\PDODatabaseService;
+use Noodlehaus\Config;
+use Slim\Container;
+use \League\Plates\Engine as Renderer;
+use Slim\Http\Response;
 
+
+/**
+ * @property $auth AuthService Current instance of HybridAuth auth service
+ * @property $authconfig ConfigReader Configuration for HybridAuth service
+ * @property $view Renderer Current Plates renderer
+ */
 class App {
 
-    /** @var  \Slim\App Current instance of the Slim application */
-    private $app;
+	/** @var $app \Slim\App Current instance of the Slim application */
+	private $app;
 
-    public function __construct() {
-        $app_config = $this->readConfig();
-        $this->app = new \Slim\App($app_config);
+	public function __construct() {
+		JWT::$leeway = 10;
+		error_reporting(-1);
+		ini_set('display_errors', 1);
+		$app_config = self::readConfig();
+		$this->app = new \Slim\App($app_config);
 
-        // Set DI components
-        $container = $this->app->getContainer();
-        $container['view'] = function ($container) {
-            $base_folder = $container->get('installation_folder');
-            $renderer = new Renderer($base_folder . 'src/Templates');
-            // Add template folders
-            $renderer->addFolder('home', $base_folder . 'src/Templates/home');
-            $renderer->addFolder('user', $base_folder . 'src/Templates/user');
-            $renderer->addFolder('layout', $base_folder . 'src/Templates/layouts');
-            return $renderer;
-        };
+		$this->setDepencyInjectionComponents();
+		$this->setRoutes();
+	}
 
-        // Home page
-        $this->app->get('/', function (Request $request, Response $response) {
-            return $this->view->render('home::homepage', ['test' => 'Test Data']);
-        });
+	protected function setDepencyInjectionComponents() {
+		// Set DI components
+		$container = $this->app->getContainer();
 
-        // User login
-        $this->app->get('/user', function (Request $request, Response $response, $args) {
-            return $this->view->render('user::login');
-        });
+		// Register DB connection
+		$container['db'] = function (Container $container) {
+			return new PDODatabaseService($container->get('settings')['db']);
+		};
 
-        // API auth
-        $this->app->get('/user/token', function (Request $request, Response $response, $args) {
-            return $response->withJson(['token' => 'not_implemented']);
-        })->setName('user_token');
+		// Register user service
+		$container['user'] = function (Container $container) {
+			return new Services\UserService($container->get('db'));
+		};
 
-        // API resources
-        $this->app->group('/api', function () {
+		// Register Plates renderer
+		$container['view'] = function (Container $container) {
+			$base_folder = $container->get('installation_folder');
+			$renderer = new Renderer($base_folder . 'src/Templates');
+			// Add template folders
+			$renderer->addFolder('home', $base_folder . 'src/Templates/home');
+			$renderer->addFolder('user', $base_folder . 'src/Templates/user');
+			$renderer->addFolder('layout', $base_folder . 'src/Templates/layouts');
+			return $renderer;
+		};
 
-            $this->map(['GET'], '', function (Request $request, Response $response) {
-                return $response->withJson(['message' => 'API GET']);
-            });
+		// Register authentication service. Use HybridauthService
+		$container['auth'] = function (Container $container) {
+			return new HybridAuthService($container->get('settings')['social']);
+		};
 
-            $this->get('/{id}', function (Request $request, Response $response, $args) {
-                return $response->withJson(['message' => 'API GET BY ID ' . $args['id']]);
-            });
+		// Register token service. Use JWTService
+		$container['jwt'] = function (Container $container) {
+			return new JWTService($container->get('settings')['jwt'], $container->get('user'));
+		};
+	}
 
-            $this->map(['POST'], '/{id}', function (Request $request, Response $response, $args) {
-                return $response->withJson(['message' => 'API POST BY ID ' . $args['id']]);
-            });
+	protected function setRoutes() {
+		// Home page
+		$this->app->get('/', GetHomepageAction::class);
 
+		// User login
+		$this->app->get('/user/authenticate', GetUserAuthenticateAction::class);
+		// User token
+		$this->app->get('/user/token', GetUserTokenAction::class);
+		// User logout
+		$this->app->get('/user/logout', GetUserLogoutAction::class);
 
-            $this->map(['DELETE'], '/{id}', function (Request $request, Response $response, $args) {
-                return $response->withJson(['message' => 'API DELETE BY ID ' . $args['id']]);
-            });
+		// API resources
+		$this->app->group('/api/v1', function () {
 
-        })->add(new JWTAuthenticationMiddleware($this->app->getContainer()));
-    }
+			$this->get('/ping', GetPingAction::class);
 
-    protected function readConfig() {
-        $config = [
-            'settings' => [
-                'debug' => true,
-            ],
-            'displayErrorDetails' => true,
-            'installation_folder' => '/var/www/html/',
-        ];
-        return $config;
-    }
+			$this->group('/user', function () {
+				$this->get('/[{id}]', APIUserAction::class.':fetch');
+				$this->post('/{id}', APIUserAction::class.':update');
+			});
 
-    /**
-     * Get current instance of the Slim application
-     * @return \Slim\App
-     */
-    public function getSlim() {
-        return $this->app;
-    }
+		})->add(new \Tuupola\Middleware\JwtAuthentication([
+			'secret' => $this->app->getContainer()->get('settings')['jwt']['key'],
+			'ignore' => ['/api/v1/ping'],
+			"error" => function (Response $response, $arguments) {
+				$data["status"] = "error";
+				$data["message"] = $arguments["message"];
+				return $response
+					->withHeader("Content-Type", "application/json")
+					->withJson($data);
+			}
+		]));
+	}
+
+	protected static function readConfig() {
+		$common_config_reader = new Config([
+			__DIR__ . '/../config/common.json',
+			'?'.__DIR__.'/../config/social.json',
+			'?'.__DIR__.'/../config/db.json',
+			'?'.__DIR__.'/../config/jwt.json',
+		]);
+		return $common_config_reader->all();
+	}
+
+	/**
+	 * Get current instance of the Slim application
+	 * @return \Slim\App
+	 */
+	public function getSlim() {
+		return $this->app;
+	}
 }

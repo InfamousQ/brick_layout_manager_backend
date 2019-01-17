@@ -1,9 +1,23 @@
+<?php
+    /** @var \League\Plates\Template\Template $this */
+    /** @var \Hybridauth\User\Profile $profile */
+?>
+<!DOCTYPE HTML>
 <html>
 <head>
     <title><?= $this->e($title) ?></title>
 </head>
 <body>
-<h1>This is user page layout</h1>
-<?= $this->section('content') ?>
+<?php
+    if (null == $profile) :
+?>
+<?= $this->section('login') ?>
+<?php
+    else :
+?>
+<?= $this->section('profile') ?>
+<?php
+    endif;
+?>
 </body>
 </html>
