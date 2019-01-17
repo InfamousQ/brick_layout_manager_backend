@@ -52,6 +52,20 @@ class UserService implements UserServiceInterface {
 		return new User($user_data['id'], $user_data['email'], $user_data['name']);
 	}
 
+	public function saveUser(User $user) {
+		$pdo = $this->db->getPDO();
+		try {
+			$pdo->beginTransaction();
+			$stmt = $pdo->prepare('UPDATE public.user SET name = :name WHERE id = :user_id');
+			$stmt->execute([':name' => $user->name, ':user_id' => $user->id]);
+			return $pdo->commit();
+		} catch (\PDOException $PDOException) {
+			error_log($PDOException->getMessage());
+			$pdo->rollBack();
+			return false;
+		}
+	}
+
 	/**
 	 * Find id of existing User which has given $email
 	 * @param string $email Email to search

@@ -8,7 +8,7 @@ use InfamousQ\LManager\Actions\GetPingAction;
 use InfamousQ\LManager\Actions\GetUserAuthenticateAction;
 use InfamousQ\LManager\Actions\GetUserLogoutAction;
 use InfamousQ\LManager\Actions\GetUserTokenAction;
-use InfamousQ\LManager\Actions\GetAPIUserAction;
+use InfamousQ\LManager\Actions\APIUserAction;
 use InfamousQ\LManager\Services\HybridAuthService;
 use InfamousQ\LManager\Services\JWTService;
 use InfamousQ\LManager\Services\PDODatabaseService;
@@ -92,7 +92,8 @@ class App {
 			$this->get('/ping', GetPingAction::class);
 
 			$this->group('/user', function () {
-				$this->get('/[{id}]', GetAPIUserAction::class);
+				$this->get('/[{id}]', APIUserAction::class.':fetch');
+				$this->post('/{id}', APIUserAction::class.':update');
 			});
 
 		})->add(new \Tuupola\Middleware\JwtAuthentication([

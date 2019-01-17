@@ -23,6 +23,13 @@ interface UserServiceInterface {
 	public function getUserById($user_id);
 
 	/**
+	 * Save given User to database
+	 * @param \InfamousQ\LManager\Models\User $user
+	 * @return boolean Was save successful
+	 */
+	public function saveUser(\InfamousQ\LManager\Models\User $user);
+
+	/**
 	 * Verify that given user id exists
 	 * @param int $user_id User id to check
 	 * @return boolean Does given $user_id exist?
