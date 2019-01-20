@@ -39,6 +39,11 @@ interface AuthenticationServiceInterface {
 	 */
 	public function disconnectAllAdapters();
 
+	/** Get name, code and icon of all available providers
+	 * @return array
+	 */
+	public function getAvailableProviders();
+
 	/**
 	 * Get names of all connected providers
 	 * @return string[]

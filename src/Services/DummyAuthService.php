@@ -34,6 +34,18 @@ class DummyAuthService extends BaseAuthenticationService {
 		throw new InvalidArgumentException("Provider '$provider_name' not found'");
 	}
 
+	public function getAvailableProviders() {
+		$provider_data = [];
+		foreach (self::$provider_config as $provider_config) {
+			$provider_data[] = [
+				'name' => $provider_config['name'],
+				'code' => $provider_config['code'],
+				'icon' => $provider_config['icon'],
+				];
+		}
+		return $provider_data;
+	}
+
 	public function getConnectedProviders() {
 		return array_keys(self::$provider_config);
 	}

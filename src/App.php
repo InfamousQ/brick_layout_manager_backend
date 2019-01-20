@@ -92,13 +92,15 @@ class App {
 			$this->get('/ping', GetPingAction::class);
 
 			$this->group('/user', function () {
+				$this->get('/providers', APIUserAction::class.':providers');
 				$this->get('/[{id}]', APIUserAction::class.':fetch');
 				$this->post('/{id}', APIUserAction::class.':update');
 			});
 
 		})->add(new \Tuupola\Middleware\JwtAuthentication([
 			'secret' => $this->app->getContainer()->get('settings')['jwt']['key'],
-			'ignore' => ['/api/v1/ping'],
+			'path' => ['/api/v1'],
+			'ignore' => ['/api/v1/ping', '/api/v1/user/providers'],
 			"error" => function (Response $response, $arguments) {
 				$data["status"] = "error";
 				$data["message"] = $arguments["message"];

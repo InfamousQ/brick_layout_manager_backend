@@ -2,18 +2,23 @@
 
 namespace InfamousQ\LManager\Actions;
 
+use \Slim\Http\Response;
+use \Slim\Http\Request;
 use \Slim\Http\StatusCode;
 
 class APIUserAction {
 
 	/** @var \InfamousQ\LManager\Services\UserServiceInterface $user_service */
 	protected $user_service;
+	/** @var \InfamousQ\LManager\Services\AuthenticationServiceInterface $auth_service */
+	protected $auth_service;
 
 	public function __construct(\Slim\Container $container) {
+		$this->auth_service = $container->get('auth');
 		$this->user_service = $container->get('user');
 	}
 
-	public function fetch(\Slim\Http\Request $request, \Slim\Http\Response $response, array $args = array()) {
+	public function fetch(Request $request, Response $response, array $args = array()) {
 		$decoded_token = $request->getAttribute('token', null);
 		$user_data = null;
 		if (is_array($decoded_token)) {
@@ -35,12 +40,12 @@ class APIUserAction {
 	}
 
 	/**
-	 * @param \Slim\Http\Request $request
-	 * @param \Slim\Http\Response $response
+	 * @param Request $request
+	 * @param Response $response
 	 * @param array $args
-	 * @return \Slim\Http\Response
+	 * @return Response
 	 */
-	public function update(\Slim\Http\Request $request, \Slim\Http\Response $response, array $args = array()) {
+	public function update(Request $request, Response $response, array $args = array()) {
 		$decoded_token = $request->getAttribute('token', null);
 		$user_data = null;
 		if (is_array($decoded_token)) {
@@ -70,5 +75,18 @@ class APIUserAction {
 		} else {
 			return $response->withJson(['error' => ['message' => 'Error occured while saving user']], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
 		}
+	}
+
+	public function providers(Request $request, Response $response) {
+		$available_providers = $this->auth_service->getAvailableProviders();
+		$json_data = [];
+		foreach ($available_providers as $available_provider) {
+			$json_data[] = [
+				'name' => $available_provider['name'],
+				'code' => $available_provider['code'],
+				'icon' => $available_provider['icon'],
+			];
+		}
+		return $response->withJson($json_data, StatusCode::HTTP_OK);
 	}
 }

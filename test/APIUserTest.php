@@ -27,12 +27,30 @@ class APIUserTest extends \PHPUnit\Framework\TestCase {
 				'user' => 'bl_test',
 				'password' => 'test',
 			],
+			'social' => [
+				'callback' => 'www.dummy.test',
+				'providers' => [
+					'test_provider' => [
+						'enabled' => true,
+						'keys' => [
+							'id' => '12345',
+							'key' => 'qwert',
+						],
+						'name' => 'Test provider',
+						'code' => 'Test provider code',
+						'icon' => 'Test provider icon',
+					],
+				],
+			],
 		];
 		$container['db'] = function($container) {
 			return new \InfamousQ\LManager\Services\PDODatabaseService($container->get('settings')['db']);
 		};
 		$container['user'] = function($container) {
 			return new \InfamousQ\LManager\Services\UserService($container->get('db'));
+		};
+		$container['auth'] = function($container) {
+			return new \InfamousQ\LManager\Services\DummyAuthService($container->get('settings')['social']);
 		};
 		$this->container = $container;
 	}
@@ -199,5 +217,24 @@ class APIUserTest extends \PHPUnit\Framework\TestCase {
 		$response = $action->update($request, $response, ['id' => $existing_user_id]);
 		$this->assertSame(\Slim\Http\StatusCode::HTTP_OK, $response->getStatusCode());
 		$this->assertJsonStringEqualsJsonString(json_encode(['id' => $existing_user_id, 'name' => 'Aaron "Test guy" Doe', 'href' => "/api/v1/users/{$existing_user_id}/", 'modules' => [], 'layouts' => []]), (string) $response->getBody());
+	}
+
+	public function testGetAvailableUsersReturns200() {
+		$action = new \InfamousQ\LManager\Actions\APIUserAction($this->container);
+		$env = Environment::mock([
+			'REQUEST_METHOD'    => 'POST',
+			'REQUEST_URI'       => '/api/v1/user/providers/',
+		]);
+
+		$request = Request::createFromEnvironment($env);
+		$response = new \Slim\Http\Response();
+		$response = $action->providers($request, $response);
+		$this->assertSame(\Slim\Http\StatusCode::HTTP_OK, $response->getStatusCode());
+		$provider_info = (object) [
+			'name' => 'Test provider',
+			'code' => 'Test provider code',
+			'icon' => 'Test provider icon',
+			];
+		$this->assertJsonStringEqualsJsonString(json_encode([$provider_info]), (string) $response->getBody());
 	}
 }
