@@ -15,6 +15,7 @@ ADD .deploy/apache-config.conf /etc/apache2/sites-enabled/000-default.conf
 
 # Enable modules
 RUN a2enmod rewrite
+RUN a2enmod headers
 RUN a2enmod ssl
 
 # PHP ini

@@ -5,12 +5,13 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<script>
-		// Call the original page with the token received from our API
-		var token = location.search.replace('?token=', '');
-		window.opener.success(token);
-
-		// Close this popup
-		window.close();
+		window.addEventListener("message", function(event) {
+			if (event.origin === 'https://www.lmanager.test' && event.data === "requestToken") {
+				let token = location.search.replace('?token=', '');
+				event.source.postMessage({ message: "deliverResult", token: token }, 'https://www.lmanager.test');
+				window.close();
+			}
+		});
 	</script>
 </head>
 <body>
