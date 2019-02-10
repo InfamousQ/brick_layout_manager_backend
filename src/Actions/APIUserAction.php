@@ -2,6 +2,7 @@
 
 namespace InfamousQ\LManager\Actions;
 
+use InfamousQ\LManager\Models\APIUserMapper;
 use \Slim\Http\Response;
 use \Slim\Http\Request;
 use \Slim\Http\StatusCode;
@@ -36,7 +37,7 @@ class APIUserAction {
 
 		// Find user that was provided by token's meta data.
 		$target_user = $this->user_service->getUserById($target_user_id);
-		return $response->withJson($target_user->getData(), StatusCode::HTTP_OK);
+		return $response->withJson(APIUserMapper::getJSON($target_user), StatusCode::HTTP_OK);
 	}
 
 	/**
@@ -71,7 +72,7 @@ class APIUserAction {
 			$target_user->$key = $value;
 		}
 		if ($this->user_service->saveUser($target_user)) {
-			return $response->withJson($target_user->getData(), StatusCode::HTTP_OK);
+			return $response->withJson(APIUserMapper::getJSON($target_user), StatusCode::HTTP_OK);
 		} else {
 			return $response->withJson(['error' => ['message' => 'Error occured while saving user']], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
 		}

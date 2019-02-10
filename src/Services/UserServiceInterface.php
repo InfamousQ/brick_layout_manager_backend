@@ -2,39 +2,39 @@
 
 namespace InfamousQ\LManager\Services;
 
+use \InfamousQ\LManager\Models\User;
+
 interface UserServiceInterface {
 
-	public function __construct(DatabaseServiceInterface $db);
+	public function __construct(MapperServiceInterface $db);
 
+	/**
+	 * Create new User for given $profile
+	 * @param \Hybridauth\User\Profile $profile HybridAuth Profile that is used to set up the User
+	 * @return User|bool New User which is set to use given $email. False if generation failed.
+	 */
 	public function createUserForProfile(\Hybridauth\User\Profile $profile);
 
 	/**
-	 * Find existing user's id by given $email
-	 * @param string $email Email to search for
-	 * @return int|false Found user id or false if nothing found
+	 * Find id of existing User which has given $email
+	 * @param string $email Email to search
+	 * @return int|null Id of user if found, null if not found
 	 */
 	public function findUserIdByEmail($email);
 
 	/**
 	 * Get existing User for given $user_id
 	 * @param int $user_id
-	 * @return \InfamousQ\LManager\Models\User User data
+	 * @return User User data
 	 */
 	public function getUserById($user_id);
 
 	/**
 	 * Save given User to database
-	 * @param \InfamousQ\LManager\Models\User $user
+	 * @param User $user
 	 * @return boolean Was save successful
 	 */
-	public function saveUser(\InfamousQ\LManager\Models\User $user);
-
-	/**
-	 * Verify that given user id exists
-	 * @param int $user_id User id to check
-	 * @return boolean Does given $user_id exist?
-	 */
-	public function verifyUserId($user_id);
+	public function saveUser(User $user);
 
 	/**
 	 * @param string $access_token Access token from social login provider

@@ -45,11 +45,11 @@ class AuthenticateTest extends \PHPUnit\Framework\TestCase {
 			],
 			'jwt' => [],
 		];
-		$container['db'] = function($container) {
-			return new \InfamousQ\LManager\Services\PDODatabaseService($container->get('settings')['db']);
+		$container['entity'] = function($container) {
+			return new \InfamousQ\LManager\Services\EntityMapperService($container->get('settings')['db']);
 		};
 		$container['user'] = function($container) {
-			return new \InfamousQ\LManager\Services\UserService($container->get('db'));
+			return new \InfamousQ\LManager\Services\UserService($container->get('entity'));
 		};
 		$container['auth'] = function($container) {
 			return new \InfamousQ\LManager\Services\DummyAuthService($container->get('settings')['social']);
@@ -61,7 +61,7 @@ class AuthenticateTest extends \PHPUnit\Framework\TestCase {
 	}
 
 	public function tearDown(){
-		self::$T->getRollback("test");
+		self::$T->getRollback("test", "0");
 	}
 
 	public function testMissingProviderAndMissingTokenReturns400() {

@@ -2,19 +2,31 @@
 
 namespace InfamousQ\LManager\Models;
 
+use Spot\EntityInterface;
+use Spot\MapperInterface;
 
-class User {
-	public $id;
-	public $name;
-	public $email;
+/**
+ * Class User
+ * @package InfamousQ\LManager\Models
+ * @property-read int $id
+ * @property string $name
+ * @property string $email
+ */
 
-	public function __construct($id = null, $email = null, $name = null) {
-		$this->id = $id;
-		$this->email = $email;
-		$this->name = $name;
+class User extends \Spot\Entity {
+
+	protected static $table = 'user';
+	public static function fields() {
+		return [
+			'id'    => ['type' => 'integer', 'primary' => true, 'autoincrement' => true],
+			'name'  => ['type' => 'string', 'required' => true],
+			'email' => ['type' => 'string', 'required' => true],
+		];
 	}
 
-	public function getData() {
-		return ['id' => $this->id, 'name' => $this->name, 'href' => '/api/v1/users/' . $this->id . '/', 'modules' => [], 'layouts' => []];
+	public static function relations(MapperInterface $mapper, EntityInterface $entity) {
+		return [
+			'user'  => $mapper->belongsTo($entity, UserToken::class, 'user_id'),
+		];
 	}
 }
