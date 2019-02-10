@@ -35,21 +35,16 @@ class UserService implements UserServiceInterface {
 		}
 	}
 
-	public function createUserForUser(User $user) {
-		$pdo = $this->db->getPDO();
+	public function createUserFromArray(array $input) {
+		/** @var User $entity */
+		$entity = null;
 		try {
-			$pdo->beginTransaction();
-			$stmt = $pdo->prepare('INSERT INTO public.user (email, name) VALUES (:email, :name) RETURNING id');
-			$stmt->execute(array(':email' => $user->email, ':name' => $user->name));
-			$new_user_id = $stmt->fetchColumn();
-			$pdo->commit();
-			return (int) $new_user_id;
-		} catch (\PDOException $PDOException) {
-			error_log($PDOException->getMessage());
-			$pdo->rollBack();
+			$entity = $this->mapper->create(['name' => $input['name'], 'email' => $input['email']]);
+			return $entity;
+		} catch (\Spot\Exception $exception) {
+			error_log($exception->getMessage());
 			return false;
-		}
-	}
+		}	}
 
 	public function getUserById($user_id) {
 		$entity = $this->mapper->get($user_id);

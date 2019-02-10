@@ -7,6 +7,8 @@ use InfamousQ\LManager\Models\Module;
 
 interface ModuleServiceInterface {
 
+	public function __construct(MapperServiceInterface $mapper_service);
+
 	/**
 	 * Generates a Module according to given data
 	 * @param string $name Name of the module

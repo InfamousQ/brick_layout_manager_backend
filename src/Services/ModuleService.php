@@ -2,63 +2,106 @@
 
 namespace InfamousQ\LManager\Services;
 
+use \Spot\MapperInterface;
 use InfamousQ\LManager\Models\Module;
+use InfamousQ\LManager\Models\Color;
+use InfamousQ\LManager\Models\Plate;
 
 class ModuleService implements ModuleServiceInterface {
 
-	/** @var DatabaseServiceInterface $db */
-	protected $db;
+	/** @var MapperInterface $mapper */
+	protected $mapper;
+	/** @var MapperInterface $color_mapper */
+	protected $color_mapper;
+	/** @var MapperInterface $plate_mapper */
+	protected $plate_mapper;
 
-	public function __construct(DatabaseServiceInterface $db) {
-		$this->db = $db;
+	public function __construct(MapperServiceInterface $mapper_service) {
+		$this->mapper = $mapper_service->getMapper(Module::class);
+		$this->color_mapper = $mapper_service->getMapper(Color::class);
+		$this->plate_mapper = $mapper_service->getMapper(Plate::class);
 	}
 
 	public function createModule($name, $user_id) {
-		$name = trim($name);
-		$user_id = (int)$user_id;
-		$pdo = $this->db->getPDO();
-
+		/** @var Module $entity */
+		$entity = null;
 		try {
-			$pdo->beginTransaction();
-			$stmt = $pdo->prepare('INSERT INTO public.module(name, user_id) VALUES (:name, :user_id) RETURNING id');
-			$stmt->execute([':name' => $name, ':user_id' => $user_id]);
-			$new_module_id = $stmt->fetchColumn();
-			$pdo->commit();
-			return new Module($new_module_id, $name, $user_id);
-		} catch (\PDOException $PDOException) {
-			error_log($PDOException->getMessage());
-			$pdo->rollBack();
-			return null;
+			$entity = $this->mapper->create(['name' => $name, 'user_id' => $user_id]);
+			return $entity;
+		} catch (\Exception $exception) {
+			error_log($exception->getMessage());
+			return false;
 		}
 	}
 
 	public function getModuleById($module_id) {
-		$module_id = (int)$module_id;
-		$pdo = $this->db->getPDO();
-		$stmt = $pdo->prepare('SELECT id, name, user_id FROM public.module WHERE id = :module_id');
-		$stmt->execute(array(':module_id' => $module_id));
-		$db_module_data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-		if (count($db_module_data) !== 1) {
+		$entity = $this->mapper->get($module_id);
+		if ($entity === false) {
 			return null;
 		}
-		$module_data = reset($db_module_data);
-		return new Module(
-			$module_data['id'],
-			$module_data['name'],
-			$module_data['user_id']
-		);
+		return $entity;
 	}
 
 	public function saveModule(Module $module) {
-		$pdo = $this->db->getPDO();
 		try {
-			$pdo->beginTransaction();
-			$stmt = $pdo->prepare('UPDATE public.module SET name = :name, user_id = :user_id WHERE id = :module_id');
-			$stmt->execute([':name' => $module->name, ':module_id' => $module->id, ':user_id' => $module->user_id]);
-			return $pdo->commit();
-		} catch (\PDOException $PDOException) {
-			error_log($PDOException->getMessage());
-			$pdo->rollBack();
+			$this->mapper->update($module);
+			return true;
+		} catch (\Exception $exception) {
+			error_log($exception->getMessage());
+			return false;
+		}
+	}
+
+	// Plate functions
+
+	public function createPlate($x, $y, $z, $h, $w, $color_id, $module_id) {
+		$entity = null;
+		try {
+			$entity = $this->plate_mapper->create([
+				'x' => $x,
+				'y' => $y,
+				'z' => $z,
+				'h' => $h,
+				'w' => $w,
+				'color_id' => $color_id,
+				'module_id' => $module_id,
+			]);
+			return $entity;
+		} catch (\Spot\Exception $exception) {
+			error_log($exception->getMessage());
+			return false;
+		}
+	}
+
+	public function savePlate(Plate $plate) {
+		try {
+			$this->plate_mapper->update($plate);
+			return true;
+		} catch (\Exception $exception) {
+			error_log($exception->getMessage());
+			return false;
+		}
+	}
+
+	// Color functions
+
+	public function createColor($name, $hex) {
+		$entity = null;
+		try {
+			$entity = $this->color_mapper->create(['name' => $name, 'hex' => $hex]);
+			return $entity;
+		} catch (\Spot\Exception $exception) {
+			error_log($exception->getMessage());
+			return false;
+		}
+	}
+
+	public function saveColor(Color $color) {
+		try {
+			$this->color_mapper->update($color);
+			return true;
+		} catch (\Exception $exception) {
+			error_log($exception->getMessage());
 			return false;
 		}
 	}

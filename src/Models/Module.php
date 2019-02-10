@@ -2,18 +2,31 @@
 
 namespace InfamousQ\LManager\Models;
 
-class Module {
-	public $id;
-	public $name;
-	public $user_id;
+use Spot\EntityInterface;
+use Spot\MapperInterface;
 
-	public function __construct($id = null, $name = null, $user_id = null) {
-		$this->id = (int) $id;
-		$this->name = $name;
-		$this->user_id = (int) $user_id;
+/**
+ * Class Module
+ * @package InfamousQ\LManager\Models
+ * @property-read int $id
+ * @property string $name
+ * @property-read User $user
+ * @property-read \Spot\Entity\Collection plates
+ */
+class Module extends \Spot\Entity {
+	protected static $table = 'module';
+	public static function fields() {
+		return [
+			'id'        => ['type' => 'integer', 'primary' => true, 'autoincrement' => true],
+			'user_id'   => ['type' => 'integer', 'required' => true],
+			'name'      => ['type' => 'string', 'required' => true],
+		];
 	}
 
-	public function getData() {
-		return ['id' => $this->id, 'name' => $this->name, 'href' => '/api/v1/modules/' . $this->id . '/', 'author' => []];
+	public static function relations(MapperInterface $mapper, EntityInterface $entity) {
+		return [
+			'user'      => $mapper->belongsTo($entity, User::class, 'user_id'),
+			'plates'    => $mapper->hasMany($entity, Plate::class, 'module_id'),
+		];
 	}
 }
