@@ -9,6 +9,7 @@ use InfamousQ\LManager\Actions\GetUserAuthenticateAction;
 use InfamousQ\LManager\Actions\GetUserLogoutAction;
 use InfamousQ\LManager\Actions\GetUserTokenAction;
 use InfamousQ\LManager\Actions\APIUserAction;
+use InfamousQ\LManager\Services\EntityMapperService;
 use InfamousQ\LManager\Services\HybridAuthService;
 use InfamousQ\LManager\Services\JWTService;
 use InfamousQ\LManager\Services\PDODatabaseService;
@@ -44,13 +45,13 @@ class App {
 		$container = $this->app->getContainer();
 
 		// Register DB connection
-		$container['db'] = function (Container $container) {
-			return new PDODatabaseService($container->get('settings')['db']);
+		$container['entity'] = function (Container $container) {
+			return new EntityMapperService($container->get('settings')['db']);
 		};
 
 		// Register user service
 		$container['user'] = function (Container $container) {
-			return new Services\UserService($container->get('db'));
+			return new Services\UserService($container->get('entity'));
 		};
 
 		// Register Plates renderer

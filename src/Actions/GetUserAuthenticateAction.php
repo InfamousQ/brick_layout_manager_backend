@@ -84,11 +84,11 @@ class GetUserAuthenticateAction {
 				// Check if user exists. If not, try to generate new user
 				$existing_user_id = $this->user_service->findUserIdByEmail($profile->email);
 				if (false == $existing_user_id) {
-					$new_user_id = $this->user_service->createUserForProfile($profile);
-					if (false == $new_user_id) {
+					$new_user = $this->user_service->createUserForProfile($profile);
+					if (false == $new_user) {
 						return $response->withStatus(501)->withJson(['error' => ['message' => 'Could not generate new user']]);
 					}
-					$existing_user_id = $new_user_id;
+					$existing_user_id = $new_user->id;
 				}
 				// User is generated, update access_token and return to user
 				$access_token = $adapter->getAccessToken()['access_token'];

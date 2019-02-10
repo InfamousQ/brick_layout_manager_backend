@@ -16,7 +16,8 @@
         "hybridauth/hybridauth": "~3.0",
         "davidepastore/slim-config": "^0.1.1",
         "robmorgan/phinx": "^0.10.6",
-        "particlebits/pdo": "^2.0"
+        "particlebits/pdo": "^2.0",
+        "vlucas/spot2": "~2.0"
     },
     "require-dev": {
         "phpunit/phpunit": "5.4.*"
