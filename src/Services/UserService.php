@@ -40,6 +40,22 @@ class UserService implements UserServiceInterface {
 		}
 	}
 
+	public function createUserForUser(User $user) {
+		$pdo = $this->db->getPDO();
+		try {
+			$pdo->beginTransaction();
+			$stmt = $pdo->prepare('INSERT INTO public.user (email, name) VALUES (:email, :name) RETURNING id');
+			$stmt->execute(array(':email' => $user->email, ':name' => $user->name));
+			$new_user_id = $stmt->fetchColumn();
+			$pdo->commit();
+			return (int) $new_user_id;
+		} catch (\PDOException $PDOException) {
+			error_log($PDOException->getMessage());
+			$pdo->rollBack();
+			return false;
+		}
+	}
+
 	public function getUserById($user_id) {
 		$pdo = $this->db->getPDO();
 		$stmt = $pdo->prepare('SELECT id, name, email FROM public.user WHERE id = :user_id');
