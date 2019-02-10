@@ -12,7 +12,7 @@ use InfamousQ\LManager\Actions\APIUserAction;
 use InfamousQ\LManager\Services\EntityMapperService;
 use InfamousQ\LManager\Services\HybridAuthService;
 use InfamousQ\LManager\Services\JWTService;
-use InfamousQ\LManager\Services\PDODatabaseService;
+use InfamousQ\LManager\Services\ModuleService;
 use Noodlehaus\Config;
 use Slim\Container;
 use \League\Plates\Engine as Renderer;
@@ -44,9 +44,14 @@ class App {
 		// Set DI components
 		$container = $this->app->getContainer();
 
-		// Register DB connection
+		// Register ORM connection
 		$container['entity'] = function (Container $container) {
 			return new EntityMapperService($container->get('settings')['db']);
+		};
+
+		// Register module service
+		$container['module'] = function (Container $container) {
+			return new ModuleService($container->get('entity'));
 		};
 
 		// Register user service

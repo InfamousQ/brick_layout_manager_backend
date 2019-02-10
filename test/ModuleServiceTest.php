@@ -1,8 +1,5 @@
 <?php
 
-use InfamousQ\LManager\Models\User;
-use InfamousQ\LManager\Models\Module;
-
 class ModuleServiceTest extends \PHPUnit\Framework\TestCase {
 
 	/** @var \Phinx\Wrapper\TextWrapper */
@@ -37,9 +34,9 @@ class ModuleServiceTest extends \PHPUnit\Framework\TestCase {
 		self::$T->getRollback("test", 0);
 	}
 
-	public function testRetrievingModuleWithNonExistingIdReturnsFalse() {
-		$non_existing_module_id = $this->module_service->getModuleById(12);
-		$this->assertNull($non_existing_module_id, 'Faulty id returns null');
+	public function testRetrievingModuleWithNonExistingIdReturnsNull() {
+		$non_existing_module = $this->module_service->getModuleById(12);
+		$this->assertNull($non_existing_module, 'Faulty id returns null');
 	}
 
 	public function testCreateModuleAndRetrieveItFromDBUsingId() {
@@ -77,5 +74,35 @@ class ModuleServiceTest extends \PHPUnit\Framework\TestCase {
 		$module = $this->module_service->getModuleById($module->id);
 		$this->assertSame(1, $module->plates->count(), 'Module has plate');
 		$this->assertTrue($plate->id == $module->plates[0]->id, 'Module\'s plate is created plate');
+	}
+
+	// Layout tests
+	public function testRetrievingLayoutWithNonExistingIdReturnsNull() {
+		$non_existing_layout = $this->module_service->getLayoutById(12);
+		$this->assertNull($non_existing_layout, 'Faulty id returns null');
+	}
+
+	public function testCreateLayout() {
+		$author_user = $this->user_service->createUserFromArray(['name' => 'Test user 4', 'email' => 'test4@test.test']);
+		$new_layout = $this->module_service->createLayout('Demo layout', $author_user->id);
+		$this->assertNotNull($new_layout->id, 'Layout created with minimal information');
+	}
+
+	public function testCreateLayoutAndAddModuleToIt() {
+		$author_user = $this->user_service->createUserFromArray(['name' => 'Test user 5', 'email' => 'test5@test.test']);
+		$layout = $this->module_service->createLayout('Demo layout', $author_user->id);
+		$this->assertNotNull($layout->id, 'Layout created');
+
+		$module = $this->module_service->createModule('Test module #4', $author_user->id);
+		$this->module_service->saveModule($module);
+
+		$this->assertTrue($this->module_service->connectModuleToLayout($module, $layout));
+		$layout = $this->module_service->getLayoutById($layout->id);
+		$this->assertSame(1, $layout->modules->count(), 'Layout has module');
+		$this->assertTrue($module->id == $layout->modules[0]->id, 'Layout\'s module is created module');
+
+		$author_user = $this->user_service->getUserById($author_user->id);
+		$this->assertSame(1, $author_user->layouts->count(), 'User has layout');
+		$this->assertTrue($layout->id == $author_user->layouts[0]->id, 'User\'s layout is created layout');
 	}
 }
