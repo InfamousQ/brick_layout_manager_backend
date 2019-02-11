@@ -12,6 +12,7 @@ use Spot\MapperInterface;
  * @property string $name
  * @property-read User $user
  * @property-read \Spot\Entity\Collection plates
+ * @property-read \Spot\Entity\Collection layouts
  */
 class Module extends \Spot\Entity {
 	protected static $table = 'module';
@@ -27,6 +28,7 @@ class Module extends \Spot\Entity {
 		return [
 			'user'      => $mapper->belongsTo($entity, User::class, 'user_id'),
 			'plates'    => $mapper->hasMany($entity, Plate::class, 'module_id'),
+			'layouts'   => $mapper->hasManyThrough($entity, Layout::class, LayoutModule::class, 'layout_id', 'module_id'),
 		];
 	}
 }
