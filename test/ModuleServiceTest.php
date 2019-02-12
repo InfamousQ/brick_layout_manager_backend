@@ -115,6 +115,22 @@ class ModuleServiceTest extends \PHPUnit\Framework\TestCase {
 		$this->assertEquals($new_color->id, $copy_of_plate->color->id, 'Value modified');
 	}
 
+	public function testAddPlateToModuleDeletePlate() {
+		$author_user = $this->user_service->createUserFromArray(['name' => 'Test user #6', 'email' => 'test6@test.test']);
+		$module = $this->module_service->createModule('Test module #6', $author_user->id);
+		$color = $this->module_service->createColor('test color #2', 'fefefe');
+		$plate = $this->module_service->createPlate(1,2,3,5,5, $color->id, $module->id);
+
+		$this->assertTrue($this->module_service->savePlate($plate), 'Plate saved');
+		$module = $this->module_service->getModuleById($module->id);
+		$this->assertSame(1, $module->plates->count(), 'Module has plate');
+
+		$this->assertTrue($this->module_service->deletePlateById($plate->id), 'Deletion successful');
+		$this->assertNull($this->module_service->getPlateById($plate->id), 'Could not fetch deleted plate via id');
+		$module = $this->module_service->getModuleById($module->id);
+		$this->assertSame(0, $module->plates->count(), 'Module has no plates');
+	}
+
 	// Layout tests
 	public function testRetrievingLayoutWithNonExistingIdReturnsNull() {
 		$non_existing_layout = $this->module_service->getLayoutById(12);
