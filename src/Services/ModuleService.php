@@ -185,6 +185,16 @@ class ModuleService {
 		}
 	}
 
+	/**
+	 * Delete Plate matching given $plate_id
+	 * @param int $plate_id Id of target Plate
+	 * @return bool Was deletion successful?
+	 */
+	public function deletePlateById($plate_id) {
+		$plate_id = (int) $plate_id;
+		return (bool) $this->plate_mapper->delete(['id' => $plate_id]);
+	}
+
 	// Color functions
 
 	/**

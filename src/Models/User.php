@@ -11,7 +11,8 @@ use Spot\MapperInterface;
  * @property-read int $id
  * @property string $name
  * @property string $email
- * @property-read \Spot\Collection layouts
+ * @property-read \Spot\Collection $modules
+ * @property-read \Spot\Collection $layouts
  */
 
 class User extends \Spot\Entity {
@@ -27,7 +28,8 @@ class User extends \Spot\Entity {
 
 	public static function relations(MapperInterface $mapper, EntityInterface $entity) {
 		return [
-			'user'      => $mapper->belongsTo($entity, UserToken::class, 'user_id'),
+			'tokens'    => $mapper->hasMany($entity, UserToken::class, 'user_id'),
+			'modules'   => $mapper->hasMany($entity, Module::class, 'user_id'),
 			'layouts'   => $mapper->hasManyThrough($entity, Layout::class, LayoutModule::class, 'layout_id', 'id'),
 		];
 	}
