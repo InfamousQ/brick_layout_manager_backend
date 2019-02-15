@@ -127,6 +127,16 @@ class ModuleService {
 		return (bool) $this->mapper->delete(['id' => $module_id]);
 	}
 
+	/**
+	 * Fetch all Modules that are set public
+	 * @return \Spot\Entity\Collection
+	 */
+	public function getPublicModules() {
+		/** @var \Spot\Entity\Collection $public_modules */
+		$public_modules = $this->mapper->select()->where(['public' => true])->order(['updated_at' => 'DESC'])->execute();
+		return $public_modules;
+	}
+
 	// Plate functions
 
 	/**

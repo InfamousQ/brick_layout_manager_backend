@@ -11,8 +11,8 @@ use Spot\MapperInterface;
  * @property-read int $id
  * @property string $name
  * @property string $email
- * @property-read \Spot\Collection $modules
- * @property-read \Spot\Collection $layouts
+ * @property-read \Spot\Entity\Collection $modules
+ * @property-read \Spot\Entity\Collection $layouts
  */
 
 class User extends \Spot\Entity {

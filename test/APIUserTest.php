@@ -276,6 +276,7 @@ class APIUserTest extends \PHPUnit\Framework\TestCase {
 		$module_json->author->id = (int) $user->id;
 		$module_json->author->name = $user->name;
 		$module_json->author->href = "/api/v1/users/{$user->id}/";
+		$module_json->public = (bool) $module->public;
 		$this->assertJsonStringEqualsJsonString(json_encode(['id' => (int) $user->id, 'name' => 'Annie Doe', 'href' => "/api/v1/users/{$user->id}/", 'modules' => [$module_json], 'layouts' => []]), (string) $response->getBody());
 	}
 }

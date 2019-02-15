@@ -16,6 +16,7 @@ class CreatePlatesModulesLayouts extends AbstractMigration {
 		$module_table = $this->table('module');
 		$module_table
 			->addColumn('name', 'string')
+			->addColumn('public', 'boolean', ['default' => true])
 			->addColumn('user_id', 'integer')
 			->addForeignKey('user_id', 'user', 'id', ['delete' => 'CASCADE'])
 			->addTimestamps()

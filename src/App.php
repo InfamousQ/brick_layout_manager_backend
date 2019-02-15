@@ -3,6 +3,7 @@
 namespace InfamousQ\LManager;
 
 use Firebase\JWT\JWT;
+use InfamousQ\LManager\Actions\APIModuleAction;
 use InfamousQ\LManager\Actions\GetHomepageAction;
 use InfamousQ\LManager\Actions\GetPingAction;
 use InfamousQ\LManager\Actions\GetUserAuthenticateAction;
@@ -101,6 +102,10 @@ class App {
 				$this->get('/providers', APIUserAction::class.':providers');
 				$this->get('/[{id}]', APIUserAction::class.':fetch');
 				$this->post('/{id}', APIUserAction::class.':update');
+			});
+
+			$this->group('/modules', function () {
+				$this->get('/', APIModuleAction::class.':fetchList');
 			});
 
 		})->add(new \Tuupola\Middleware\JwtAuthentication([
