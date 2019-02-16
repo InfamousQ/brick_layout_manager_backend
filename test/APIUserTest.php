@@ -271,7 +271,7 @@ class APIUserTest extends \PHPUnit\Framework\TestCase {
 		$module_json->id = (int) $module->id;
 		$module_json->href = "/api/v1/modules/{$module->id}/";
 		$module_json->name = 'Test module #1';
-		$module_json->created = $module->created_at->format('U');
+		$module_json->created = $module->created_at->format(\DateTimeInterface::RFC3339);
 		$module_json->author = new stdClass();
 		$module_json->author->id = (int) $user->id;
 		$module_json->author->name = $user->name;

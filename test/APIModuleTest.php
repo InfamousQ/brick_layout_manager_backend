@@ -109,10 +109,10 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$module_json->author->id = (int) $user->id;
 		$module_json->author->name = $user->name;
 		$module_json->author->href = "/api/v1/users/{$user->id}/";
-		$this->assertJsonStringEqualsJsonString( json_encode([$module_json]), (string) $response->getBody(), 'No modules set, response is empty');
+		$this->assertJsonStringEqualsJsonString( json_encode([$module_json]), (string) $response->getBody(), 'Module set, found from response');
 	}
 
-	public function testCannotPOSTNewMdoduleWithoutToken() {
+	public function testCreatePOSTNewMdoduleWithoutToken() {
 		$action = new APIModuleAction($this->container);
 		$env = Environment::mock([
 			'REQUEST_METHOD'    => 'POST',
@@ -158,5 +158,136 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$this->assertSame(\Slim\Http\StatusCode::HTTP_OK, $response->getStatusCode());
 		$response_array = array_intersect_key(json_decode((string) $response->getBody(), true), $module_array);
 		$this->assertEquals($module_array, $response_array, 'Module saved successfully');
+
+		$env = Environment::mock([
+			'REQUEST_METHOD'    => 'GET',
+			'REQUEST_URI'       => '/api/v1/modules/',
+		]);
+		$request = Request::createFromEnvironment($env);
+		$request = $request->withAttribute('token', ['user' => ['id' => $user->id]]);
+		$response = new \Slim\Http\Response();
+
+		$response = $action->fetchList($request, $response);
+		$saved_module = $this->container->module->getModuleById($module_array['id']);
+		$module_json = new stdClass();
+		$module_json->id = (int) $saved_module->id;
+		$module_json->href = "/api/v1/modules/{$saved_module->id}/";
+		$module_json->name = 'Uploaded module #1';
+		$module_json->created = $saved_module->created_at->format(\DateTimeInterface::RFC3339);
+		$module_json->author = new stdClass();
+		$module_json->author->id = (int) $user->id;
+		$module_json->author->name = $user->name;
+		$module_json->author->href = "/api/v1/users/{$user->id}/";
+		$this->assertSame(\Slim\Http\StatusCode::HTTP_OK, $response->getStatusCode());
+		$this->assertJsonStringEqualsJsonString( json_encode([$module_json]), (string) $response->getBody(), 'Module shows in list' );
+	}
+
+	public function testViewSingleModuleWithoutTokenReturns401() {
+		/** @var User $user */
+		$user = $this->container->user->createUserFromArray(['name' => 'Cecil Doe', 'email' => 'cecil.doe@test.test']);
+		/** @var Module $module */
+		$module = $this->container->module->createModule('Test module #3', $user->id);
+		$action = new APIModuleAction($this->container);
+		$env = Environment::mock([
+			'REQUEST_METHOD'    => 'GET',
+			'REQUEST_URI'       => "/api/v1/modules/{$module->id}/",
+		]);
+		$request = Request::createFromEnvironment($env);
+		$response = new \Slim\Http\Response();
+
+		$response = $action->fetchSingle($request, $response);
+		$this->assertSame(\Slim\Http\StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode());
+		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Invalid token']]), (string) $response->getBody());
+	}
+
+	public function testViewSingleModuleWithTokenReturns200() {
+		/** @var User $user */
+		$user = $this->container->user->createUserFromArray(['name' => 'Danny Doe', 'email' => 'danny.doe@test.test']);
+		/** @var Module $module */
+		$module = $this->container->module->createModule('Test module #4', $user->id);
+		//$this->assertTrue($this->container->module->saveModule($module), 'Module created');
+		//$module = $this->container->module->getModuleById($module->id);
+
+		$action = new APIModuleAction($this->container);
+		$env = Environment::mock([
+			'REQUEST_METHOD'    => 'GET',
+			'REQUEST_URI'       => "/api/v1/modules/{$module->id}/",
+		]);
+		$request = Request::createFromEnvironment($env);
+		$request = $request->withAttribute('token', ['user' => ['id' => $user->id]]);
+		$response = new \Slim\Http\Response();
+
+		$response = $action->fetchSingle($request, $response, ['id' => $module->id]);
+		$this->assertSame(\Slim\Http\StatusCode::HTTP_OK, $response->getStatusCode());
+		$module_json = new stdClass();
+		$module_json->id = (int) $module->id;
+		$module_json->href = "/api/v1/modules/{$module->id}/";
+		$module_json->name = 'Test module #4';
+		$module_json->public = true;
+		$module_json->created = $module->created_at->format(\DateTimeInterface::RFC3339);
+		$module_json->author = new stdClass();
+		$module_json->author->id = (int) $user->id;
+		$module_json->author->name = $user->name;
+		$module_json->author->href = "/api/v1/users/{$user->id}/";
+		$this->assertJsonStringEqualsJsonString( json_encode($module_json), (string) $response->getBody(), 'Module set, found from response');
+	}
+
+	public function testEditingSingleModuleWithoutTokenReturns401() {
+		/** @var User $user */
+		$user = $this->container->user->createUserFromArray(['name' => 'Fred Doe', 'email' => 'fred.doe@test.test']);
+		/** @var Module $module */
+		$module = $this->container->module->createModule('Test module #5', $user->id);
+
+		$action = new APIModuleAction($this->container);
+		$env = Environment::mock([
+			'REQUEST_METHOD'    => 'PUT',
+			'REQUEST_URI'       => "/api/v1/modules/{$module->id}",
+		]);
+		$new_request_body = new \Slim\Http\RequestBody();
+		$new_request_body->write(json_encode(['name' => 'Uploaded module #2']));
+		$request = Request::createFromEnvironment($env);
+		$request = $request
+			->withBody($new_request_body)
+			->withHeader('Content-Type', 'application/json');
+		$response = new Response();
+
+		$response = $action->editSingle($request, $response, ['id' => $module->id]);
+		$this->assertSame(\Slim\Http\StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode());
+		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Invalid token']]), (string) $response->getBody());
+	}
+
+	public function testEditingSingleModuleWithTokenReturns200() {
+		/** @var User $user */
+		$user = $this->container->user->createUserFromArray(['name' => 'Gary Doe', 'email' => 'gary.doe@test.test']);
+		/** @var Module $module */
+		$module = $this->container->module->createModule('Test module #6', $user->id);
+
+		$action = new APIModuleAction($this->container);
+		$env = Environment::mock([
+			'REQUEST_METHOD'    => 'PUT',
+			'REQUEST_URI'       => "/api/v1/modules/{$module->id}",
+		]);
+		$new_request_body = new \Slim\Http\RequestBody();
+		$new_request_body->write(json_encode(['name' => 'Uploaded module #3']));
+		$request = Request::createFromEnvironment($env);
+		$request = $request
+			->withAttribute('token', ['user' => ['id' => $user->id]])
+			->withBody($new_request_body)
+			->withHeader('Content-Type', 'application/json');
+		$response = new Response();
+
+		$response = $action->editSingle($request, $response, ['id' => $module->id]);
+		$this->assertSame(\Slim\Http\StatusCode::HTTP_OK, $response->getStatusCode());
+		$edited_module_json = new stdClass();
+		$edited_module_json->id = (int) $module->id;
+		$edited_module_json->href = "/api/v1/modules/{$module->id}/";
+		$edited_module_json->name = 'Uploaded module #3';
+		$edited_module_json->public = true;
+		$edited_module_json->created = $module->created_at->format(\DateTimeInterface::RFC3339);
+		$edited_module_json->author = new stdClass();
+		$edited_module_json->author->id = (int) $user->id;
+		$edited_module_json->author->name = $user->name;
+		$edited_module_json->author->href = "/api/v1/users/{$user->id}/";
+		$this->assertJsonStringEqualsJsonString( json_encode($edited_module_json), (string) $response->getBody());
 	}
 }
