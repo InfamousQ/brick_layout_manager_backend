@@ -3,6 +3,7 @@
 namespace InfamousQ\LManager\Actions;
 
 use InfamousQ\LManager\Models\APIModuleMapper;
+use InfamousQ\LManager\Models\APIPlatesMapper;
 use \Slim\Http\Response;
 use \Slim\Http\Request;
 use \Slim\Http\StatusCode;
@@ -110,5 +111,54 @@ class APIModuleAction {
 			return $response->withJson(['error' => ['message' => 'Module saving failed']], StatusCode::HTTP_BAD_REQUEST);
 		}
 		return $response->withJson(APIModuleMapper::getJSON($target_module), StatusCode::HTTP_OK);
+	}
+
+	public function fetchSinglePlates(Request $request, Response $response, array $args = array()) {
+		$decoded_token = $request->getAttribute('token', null);
+		$user_data = null;
+		if (is_array($decoded_token)) {
+			$user_data = (array_key_exists('user', $decoded_token)) ? $decoded_token['user'] : null;
+		}
+		if (null === $decoded_token || null === $user_data || empty($user_data['id'])) {
+			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
+		}
+
+		$current_user = $this->user_service->getUserById($user_data['id']);
+		if (null === $current_user) {
+			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
+		}
+
+		if (!array_key_exists('id', $args)) {
+			return $response->withJson(['error' => ['message' => 'Module not found']], StatusCode::HTTP_NOT_FOUND);
+		}
+
+		$target_module_id = (int) $args['id'];
+		$target_module = $this->module_service->getModuleById($target_module_id);
+		if (null === $target_module) {
+			return $response->withJson(['error' => ['message' => 'Module not found']], StatusCode::HTTP_NOT_FOUND);
+		}
+
+		return $response->withJson(APIPlatesMapper::getModulePlatesJSON($target_module),StatusCode::HTTP_OK);
+	}
+
+	public function editSinglePlates(Request $request, Response $response, array $args = array()) {
+		$decoded_token = $request->getAttribute('token', null);
+		$user_data = null;
+		if (is_array($decoded_token)) {
+			$user_data = (array_key_exists('user', $decoded_token)) ? $decoded_token['user'] : null;
+		}
+		if (null === $decoded_token || null === $user_data || empty($user_data['id'])) {
+			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
+		}
+
+		$current_user = $this->user_service->getUserById($user_data['id']);
+		if (null === $current_user) {
+			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
+		}
+
+		if (!array_key_exists('id', $args)) {
+			return $response->withJson(['error' => ['message' => 'Module not found']], StatusCode::HTTP_NOT_FOUND);
+		}
+
 	}
 }

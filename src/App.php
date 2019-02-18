@@ -106,6 +106,11 @@ class App {
 
 			$this->group('/modules', function () {
 				$this->get('/', APIModuleAction::class.':fetchList');
+				$this->post('/', APIModuleAction::class.':insert');
+				$this->get('/{id}', APIModuleAction::class.'fetchSingle');
+				$this->put('/{id}', APIModuleAction::class.'editSingle');
+				$this->get('/{id}/plates', APIModuleAction::class.'fetchSinglePlates');
+				$this->patch('/{id}/plates', APIModuleAction::class.'editSinglePlates');
 			});
 
 		})->add(new \Tuupola\Middleware\JwtAuthentication([
