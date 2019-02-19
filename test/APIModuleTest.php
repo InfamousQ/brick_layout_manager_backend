@@ -379,4 +379,86 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$plates_json = [$white_plate_json, $black_plate_json];
 		$this->assertJsonStringEqualsJsonString( json_encode($plates_json), (string) $response->getBody());
 	}
+
+	public function testPOSTModulesPlatesWithoutTokenReturns401() {
+		/** @var User $user */
+		$user = $this->container->user->createUserFromArray(['name' => 'Niles Doe', 'email' => 'niles.doe@test.test']);
+		/** @var Module $module */
+		$module = $this->container->module->createModule('Test module #9', $user->id);
+		$white_color = $this->container->module->createColor('White', '000000');
+
+		$action = new APIModuleAction($this->container);
+		$env = Environment::mock([
+			'REQUEST_METHOD'    => 'POST',
+			'REQUEST_URI'       => "/api/v1/modules/{$module->id}/plates/",
+		]);
+		$new_request_body = new \Slim\Http\RequestBody();
+		$new_request_body->write(json_encode(['x' => 31, 'y' => 32, 'z' => 33, 'h' => 34, 'w' => 35, 'color' => $white_color->id]));
+		$request = Request::createFromEnvironment($env);
+		$response = new \Slim\Http\Response();
+		$response = $response->withBody($new_request_body);
+
+		$response = $action->addPlate($request, $response, ['id' => $module->id]);
+		$this->assertSame(\Slim\Http\StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode());
+		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Invalid token']]), (string) $response->getBody());
+	}
+
+	public function testPOSTModulesPlatesWithInvalidModuleIdReturns401() {
+		/** @var User $user */
+		$user = $this->container->user->createUserFromArray(['name' => 'Olivia Doe', 'email' => 'Olivia.doe@test.test']);
+		$invalid_module_id = 9999;
+		$white_color = $this->container->module->createColor('White', '000000');
+
+		$action = new APIModuleAction($this->container);
+		$env = Environment::mock([
+			'REQUEST_METHOD'    => 'POST',
+			'REQUEST_URI'       => "/api/v1/modules/{$invalid_module_id}/plates/",
+		]);
+		$new_request_body = new \Slim\Http\RequestBody();
+		$new_request_body->write(json_encode(['x' => 31, 'y' => 32, 'z' => 33, 'h' => 34, 'w' => 35, 'color' => $white_color->id]));
+		$request = Request::createFromEnvironment($env);
+		$request = $request->withAttribute('token', ['user' => ['id' => $user->id]]);
+		$response = new \Slim\Http\Response();
+
+		$response = $action->fetchSinglePlates($request, $response, ['id' => $invalid_module_id]);
+		$this->assertSame(\Slim\Http\StatusCode::HTTP_NOT_FOUND, $response->getStatusCode());
+		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Module not found']]), (string) $response->getBody());
+	}
+
+	public function testPOSTModulesPlatesWithValidDataReturns200() {
+		/** @var User $user */
+		$user = $this->container->user->createUserFromArray(['name' => 'Peter Doe', 'email' => 'peter.doe@test.test']);
+		/** @var Module $module */
+		$module = $this->container->module->createModule('Test module #10', $user->id);
+		$white_color = $this->container->module->createColor('White', '000000');
+
+		$action = new APIModuleAction($this->container);
+		$env = Environment::mock([
+			'REQUEST_METHOD'    => 'POST',
+			'REQUEST_URI'       => "/api/v1/modules/{$module->id}/plates/",
+		]);
+		$new_request_body = new \Slim\Http\RequestBody();
+		$new_request_body->write(json_encode(['x' => 31, 'y' => 32, 'z' => 33, 'h' => 34, 'w' => 35, 'color' => $white_color->id]));
+		$request = Request::createFromEnvironment($env);
+		$request = $request
+			->withAttribute('token', ['user' => ['id' => $user->id]])
+			->withBody($new_request_body)
+			->withHeader('Content-Type', 'application/json');
+		$response = new \Slim\Http\Response();
+
+		$response = $action->addPlate($request, $response, ['id' => $module->id]);
+		$this->assertSame(\Slim\Http\StatusCode::HTTP_OK, $response->getStatusCode());
+		$plate_json = new stdClass();
+		$plate_json->id = 1;
+		$plate_json->x = 31;
+		$plate_json->y = 32;
+		$plate_json->z = 33;
+		$plate_json->h = 34;
+		$plate_json->w = 35;
+		$plate_json->color = new stdClass();
+		$plate_json->color->id = (int) $white_color->id;
+		$plate_json->color->name = 'White';
+		$plate_json->color->hex = '000000';
+		$this->assertJsonStringEqualsJsonString( json_encode($plate_json), (string) $response->getBody());
+	}
 }

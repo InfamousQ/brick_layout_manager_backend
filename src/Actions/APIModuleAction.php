@@ -141,7 +141,7 @@ class APIModuleAction {
 		return $response->withJson(APIPlatesMapper::getModulePlatesJSON($target_module),StatusCode::HTTP_OK);
 	}
 
-	public function editSinglePlates(Request $request, Response $response, array $args = array()) {
+	public function addPlate(Request $request, Response $response, array $args = array()) {
 		$decoded_token = $request->getAttribute('token', null);
 		$user_data = null;
 		if (is_array($decoded_token)) {
@@ -160,5 +160,28 @@ class APIModuleAction {
 			return $response->withJson(['error' => ['message' => 'Module not found']], StatusCode::HTTP_NOT_FOUND);
 		}
 
+		$target_module_id = (int) $args['id'];
+		$target_module = $this->module_service->getModuleById($target_module_id);
+		if (null === $target_module) {
+			return $response->withJson(['error' => ['message' => 'Module not found']], StatusCode::HTTP_NOT_FOUND);
+		}
+
+		$json_fields = $request->getParsedBody();
+		$allowed_plate_field_keys = ['x', 'y', 'z', 'h', 'w', 'color'];
+		$allowed_json_fields = array_intersect_key($json_fields, array_flip($allowed_plate_field_keys));
+		$allowed_json_fields['module'] = $target_module->id;
+		$target_plate = $this->module_service->createPlate(
+			(int) $allowed_json_fields['x'],
+			(int) $allowed_json_fields['y'],
+			(int) $allowed_json_fields['z'],
+			(int) $allowed_json_fields['h'],
+			(int) $allowed_json_fields['w'],
+			(int) $allowed_json_fields['color'],
+			(int) $allowed_json_fields['module']
+			);
+		if (null == $target_plate) {
+			return $response->withJson(['error' => ['message' => 'Plate saving failed']], StatusCode::HTTP_BAD_REQUEST);
+		}
+		return $response->withJson(APIPlatesMapper::getJSON($target_plate), StatusCode::HTTP_OK);
 	}
 }
