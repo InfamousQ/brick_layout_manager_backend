@@ -9,6 +9,9 @@ use \Slim\Http\Request;
 use \Slim\Http\StatusCode;
 
 class APIModuleAction {
+
+	use readsUserDataFromToken;
+
 	/** @var \InfamousQ\LManager\Services\ModuleService $module_service */
 	protected $module_service;
 	/** @var \InfamousQ\LManager\Services\UserServiceInterface $user_service */
@@ -29,16 +32,14 @@ class APIModuleAction {
 	}
 
 	public function insert(Request $request, Response $response, array $args = []) {
-		$decoded_token = $request->getAttribute('token', null);
-		$user_data = null;
-		if (is_array($decoded_token)) {
-			$user_data = (array_key_exists('user', $decoded_token)) ? $decoded_token['user'] : null;
-		}
-		if (null === $decoded_token || null === $user_data || empty($user_data['id'])) {
+
+		try {
+			$this->getUserDataFromToken($request);
+		} catch (\InvalidArgumentException $e) {
 			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
 		}
 
-		$current_user = $this->user_service->getUserById($user_data['id']);
+		$current_user = $this->user_service->getUserById($this->token_user_data->id);
 		if (null === $current_user) {
 			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
 		}
@@ -54,16 +55,14 @@ class APIModuleAction {
 	}
 
 	public function fetchSingle(Request $request, Response $response, array $args = array()) {
-		$decoded_token = $request->getAttribute('token', null);
-		$user_data = null;
-		if (is_array($decoded_token)) {
-			$user_data = (array_key_exists('user', $decoded_token)) ? $decoded_token['user'] : null;
-		}
-		if (null === $decoded_token || null === $user_data || empty($user_data['id'])) {
+
+		try {
+			$this->getUserDataFromToken($request);
+		} catch (\InvalidArgumentException $e) {
 			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
 		}
 
-		$current_user = $this->user_service->getUserById($user_data['id']);
+		$current_user = $this->user_service->getUserById($this->token_user_data->id);
 		if (null === $current_user) {
 			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
 		}
@@ -80,16 +79,14 @@ class APIModuleAction {
 	}
 
 	public function editSingle(Request $request, Response $response, array $args = array()) {
-		$decoded_token = $request->getAttribute('token', null);
-		$user_data = null;
-		if (is_array($decoded_token)) {
-			$user_data = (array_key_exists('user', $decoded_token)) ? $decoded_token['user'] : null;
-		}
-		if (null === $decoded_token || null === $user_data || empty($user_data['id'])) {
+
+		try {
+			$this->getUserDataFromToken($request);
+		} catch (\InvalidArgumentException $e) {
 			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
 		}
 
-		$current_user = $this->user_service->getUserById($user_data['id']);
+		$current_user = $this->user_service->getUserById($this->token_user_data->id);
 		if (null === $current_user) {
 			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
 		}
@@ -113,17 +110,44 @@ class APIModuleAction {
 		return $response->withJson(APIModuleMapper::getJSON($target_module), StatusCode::HTTP_OK);
 	}
 
-	public function fetchSinglePlates(Request $request, Response $response, array $args = array()) {
-		$decoded_token = $request->getAttribute('token', null);
-		$user_data = null;
-		if (is_array($decoded_token)) {
-			$user_data = (array_key_exists('user', $decoded_token)) ? $decoded_token['user'] : null;
-		}
-		if (null === $decoded_token || null === $user_data || empty($user_data['id'])) {
+	public function deleteSingle(Request $request, Response $response, array $args = array()) {
+
+		try {
+			$this->getUserDataFromToken($request);
+		} catch (\InvalidArgumentException $e) {
 			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
 		}
 
-		$current_user = $this->user_service->getUserById($user_data['id']);
+		$current_user = $this->user_service->getUserById($this->token_user_data->id);
+		if (null === $current_user) {
+			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
+		}
+
+		if (!array_key_exists('id', $args)) {
+			return $response->withJson(['error' => ['message' => 'Module not found']], StatusCode::HTTP_NOT_FOUND);
+		}
+
+		$target_module_id = (int) $args['id'];
+		$target_module = $this->module_service->getModuleById($target_module_id);
+
+		if (null === $target_module) {
+			return $response->withJson(['error' => ['message' => 'Module not found']], StatusCode::HTTP_NOT_FOUND);
+		}
+
+		if ($target_module->user->id !== $current_user->id) {
+			return $response->withJson(['error' => ['message' => 'Not owner']], StatusCode::HTTP_UNAUTHORIZED);
+		}
+	}
+
+	public function fetchSinglePlates(Request $request, Response $response, array $args = array()) {
+
+		try {
+			$this->getUserDataFromToken($request);
+		} catch (\InvalidArgumentException $e) {
+			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
+		}
+
+		$current_user = $this->user_service->getUserById($this->token_user_data->id);
 		if (null === $current_user) {
 			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
 		}
@@ -142,16 +166,14 @@ class APIModuleAction {
 	}
 
 	public function addPlate(Request $request, Response $response, array $args = array()) {
-		$decoded_token = $request->getAttribute('token', null);
-		$user_data = null;
-		if (is_array($decoded_token)) {
-			$user_data = (array_key_exists('user', $decoded_token)) ? $decoded_token['user'] : null;
-		}
-		if (null === $decoded_token || null === $user_data || empty($user_data['id'])) {
+
+		try {
+			$this->getUserDataFromToken($request);
+		} catch (\InvalidArgumentException $e) {
 			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
 		}
 
-		$current_user = $this->user_service->getUserById($user_data['id']);
+		$current_user = $this->user_service->getUserById($this->token_user_data->id);
 		if (null === $current_user) {
 			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
 		}

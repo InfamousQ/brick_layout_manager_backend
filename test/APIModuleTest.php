@@ -78,7 +78,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 			'REQUEST_URI'       => '/api/v1/modules/',
 		]);
 		$request = Request::createFromEnvironment($env);
-		$request = $request->withAttribute('token', ['user' => ['id' => $user->id]]);
+		$request = $request->withAttribute('token', ['data' => (object) ['id' => $user->id]]);
 		$response = new \Slim\Http\Response();
 
 		$response = $action->fetchList($request, $response);
@@ -97,7 +97,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 			'REQUEST_URI'       => '/api/v1/modules/',
 		]);
 		$request = Request::createFromEnvironment($env);
-		$request = $request->withAttribute('token', ['user' => ['id' => $user->id]]);
+		$request = $request->withAttribute('token', ['data' => (object) ['id' => $user->id]]);
 		$response = new \Slim\Http\Response();
 
 		$response = $action->fetchList($request, $response);
@@ -146,11 +146,10 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$new_request_body->write(json_encode(['name' => 'Uploaded module #1']));
 		$request = Request::createFromEnvironment($env);
 		$request = $request
-			->withAttribute('token', ['user' => ['id' => $user->id]])
+			->withAttribute('token', ['data' => (object) ['id' => $user->id]])
 			->withBody($new_request_body)
 			->withHeader('Content-Type', 'application/json');
 		$response = new Response();
-
 		$response = $action->insert($request, $response);
 		$module_array = [
 			'id' => 1,
@@ -166,7 +165,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 			'REQUEST_URI'       => '/api/v1/modules/',
 		]);
 		$request = Request::createFromEnvironment($env);
-		$request = $request->withAttribute('token', ['user' => ['id' => $user->id]]);
+		$request = $request->withAttribute('token', ['data' => (object) ['id' => $user->id]]);
 		$response = new \Slim\Http\Response();
 
 		$response = $action->fetchList($request, $response);
@@ -214,7 +213,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 			'REQUEST_URI'       => "/api/v1/modules/{$module->id}/",
 		]);
 		$request = Request::createFromEnvironment($env);
-		$request = $request->withAttribute('token', ['user' => ['id' => $user->id]]);
+		$request = $request->withAttribute('token', ['data' => (object) ['id' => $user->id]]);
 		$response = new \Slim\Http\Response();
 
 		$response = $action->fetchSingle($request, $response, ['id' => $module->id]);
@@ -271,7 +270,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$new_request_body->write(json_encode(['name' => 'Uploaded module #3']));
 		$request = Request::createFromEnvironment($env);
 		$request = $request
-			->withAttribute('token', ['user' => ['id' => $user->id]])
+			->withAttribute('token', ['data' => (object) ['id' => $user->id]])
 			->withBody($new_request_body)
 			->withHeader('Content-Type', 'application/json');
 		$response = new Response();
@@ -291,11 +290,76 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$this->assertJsonStringEqualsJsonString( json_encode($edited_module_json), (string) $response->getBody());
 	}
 
+	public function testDeletingSingleModuleWithoutTokenReturns401() {
+		/** @var User $user */
+		$user = $this->container->user->createUserFromArray(['name' => 'Gary John Doe', 'email' => 'gary.john.doe@test.test']);
+		/** @var Module $module */
+		$module = $this->container->module->createModule('Test module #6.5', $user->id);
+
+		$action = new APIModuleAction($this->container);
+		$env = Environment::mock([
+			'REQUEST_METHOD'    => 'PUT',
+			'REQUEST_URI'       => "/api/v1/modules/{$module->id}/",
+		]);
+		$new_request_body = new \Slim\Http\RequestBody();
+		$new_request_body->write(json_encode(['name' => 'Uploaded module #2']));
+		$request = Request::createFromEnvironment($env);
+		$request = $request
+			->withBody($new_request_body)
+			->withHeader('Content-Type', 'application/json');
+		$response = new Response();
+
+		$response = $action->deleteSingle($request, $response, ['id' => $module->id]);
+		$this->assertSame(\Slim\Http\StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode());
+		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Invalid token']]), (string) $response->getBody());
+	}
+
+	public function testDeletingSingleModuleWithInvalidModuleIdReturns401() {
+		/** @var User $user */
+		$user = $this->container->user->createUserFromArray(['name' => 'Henry Jackson Doe', 'email' => 'henry.jackson.doe@test.test']);
+		$invalid_module_id = 9999;
+
+		$action = new APIModuleAction($this->container);
+		$env = Environment::mock([
+			'REQUEST_METHOD'    => 'DELETE',
+			'REQUEST_URI'       => "/api/v1/modules/{$invalid_module_id}/plates/",
+		]);
+		$request = Request::createFromEnvironment($env);
+		$request = $request->withAttribute('token', ['data' => (object) ['id' => $user->id]]);
+		$response = new \Slim\Http\Response();
+
+		$response = $action->deleteSingle($request, $response, ['id' => $invalid_module_id]);
+		$this->assertSame(\Slim\Http\StatusCode::HTTP_NOT_FOUND, $response->getStatusCode());
+		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Module not found']]), (string) $response->getBody());
+	}
+
+	public function testDeletingSingleModuleWithoutBeingOwnerReturns403() {
+		/** @var User $user */
+		$user = $this->container->user->createUserFromArray(['name' => 'Henry Doe', 'email' => 'henry.doe@test.test']);
+		/** @var User $owner */
+		$owner = $this->container->user->createUserFromArray(['name' => 'Henry Owner Doe', 'email' => 'henry.owner.doe@test.test']);
+		/** @var Module $module */
+		$module = $this->container->module->createModule('Test module #7.54', $owner->id);
+
+		$action = new APIModuleAction($this->container);
+		$env = Environment::mock([
+			'REQUEST_METHOD'    => 'DELETE',
+			'REQUEST_URI'       => "/api/v1/modules/{$module->id}/plates/",
+		]);
+		$request = Request::createFromEnvironment($env);
+		$request = $request->withAttribute('token', ['data' => (object) ['id' => $user->id]]);
+		$response = new \Slim\Http\Response();
+
+		$response = $action->deleteSingle($request, $response, ['id' => $module->id]);
+		$this->assertSame(\Slim\Http\StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode());
+		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Not owner']]), (string) $response->getBody());
+	}
+
 	public function testFetchingModulesPlatesWithoutTokenReturns401() {
 		/** @var User $user */
 		$user = $this->container->user->createUserFromArray(['name' => 'Henry Doe', 'email' => 'henry.doe@test.test']);
 		/** @var Module $module */
-		$module = $this->container->module->createModule('Test module #7', $user->id);
+		$module = $this->container->module->createModule('Test module #7.5', $user->id);
 
 		$action = new APIModuleAction($this->container);
 		$env = Environment::mock([
@@ -321,7 +385,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 			'REQUEST_URI'       => "/api/v1/modules/{$invalid_module_id}/plates/",
 		]);
 		$request = Request::createFromEnvironment($env);
-		$request = $request->withAttribute('token', ['user' => ['id' => $user->id]]);
+		$request = $request->withAttribute('token', ['data' => (object) ['id' => $user->id]]);
 		$response = new \Slim\Http\Response();
 
 		$response = $action->fetchSinglePlates($request, $response, ['id' => $invalid_module_id]);
@@ -349,7 +413,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 			'REQUEST_URI'       => "/api/v1/modules/{$module->id}/plates/",
 		]);
 		$request = Request::createFromEnvironment($env);
-		$request = $request->withAttribute('token', ['user' => ['id' => $user->id]]);
+		$request = $request->withAttribute('token', ['data' => (object) ['id' => $user->id]]);
 		$response = new \Slim\Http\Response();
 
 		$response = $action->fetchSinglePlates($request, $response, ['id' => $module->id]);
@@ -417,7 +481,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$new_request_body = new \Slim\Http\RequestBody();
 		$new_request_body->write(json_encode(['x' => 31, 'y' => 32, 'z' => 33, 'h' => 34, 'w' => 35, 'color' => $white_color->id]));
 		$request = Request::createFromEnvironment($env);
-		$request = $request->withAttribute('token', ['user' => ['id' => $user->id]]);
+		$request = $request->withAttribute('token', ['data' => (object) ['id' => $user->id]]);
 		$response = new \Slim\Http\Response();
 
 		$response = $action->fetchSinglePlates($request, $response, ['id' => $invalid_module_id]);
@@ -441,7 +505,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$new_request_body->write(json_encode(['x' => 31, 'y' => 32, 'z' => 33, 'h' => 34, 'w' => 35, 'color' => $white_color->id]));
 		$request = Request::createFromEnvironment($env);
 		$request = $request
-			->withAttribute('token', ['user' => ['id' => $user->id]])
+			->withAttribute('token', ['data' => (object) ['id' => $user->id]])
 			->withBody($new_request_body)
 			->withHeader('Content-Type', 'application/json');
 		$response = new \Slim\Http\Response();
@@ -459,6 +523,18 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$plate_json->color->id = (int) $white_color->id;
 		$plate_json->color->name = 'White';
 		$plate_json->color->hex = '000000';
-		$this->assertJsonStringEqualsJsonString( json_encode($plate_json), (string) $response->getBody());
+		$this->assertJsonStringEqualsJsonString( json_encode($plate_json), (string) $response->getBody(), 'Plate generated with right data');
+
+		$env = Environment::mock([
+			'REQUEST_METHOD'        => 'GET',
+			'REQUEST_URI'       => "/api/v1/modules/{$module->id}/plates/",
+		]);
+		$request = Request::createFromEnvironment($env);
+		$request = $request->withAttribute('token', ['data' => (object) ['id' => $user->id]]);
+		$response = new \Slim\Http\Response();
+
+		$response = $action->fetchSinglePlates($request, $response, ['id' => $module->id]);
+		$this->assertSame(\Slim\Http\StatusCode::HTTP_OK, $response->getStatusCode());
+		$this->assertJsonStringEqualsJsonString( json_encode([$plate_json]), (string) $response->getBody(), 'Generated plate found from GET');
 	}
 }
