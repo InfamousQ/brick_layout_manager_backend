@@ -93,7 +93,7 @@ class APIUserTest extends \PHPUnit\Framework\TestCase {
 		]);
 		$request = Request::createFromEnvironment($env);
 		$response = new \Slim\Http\Response();
-		$request = $request->withAttribute('token', ['user' => ['id' => $new_user->id]]);
+		$request = $request->withAttribute('token', ['data' => (object) ['id' => $new_user->id]]);
 
 		$response = $action->fetch($request, $response, []);
 		$this->assertSame(\Slim\Http\StatusCode::HTTP_OK, $response->getStatusCode());
@@ -141,7 +141,7 @@ class APIUserTest extends \PHPUnit\Framework\TestCase {
 			'REQUEST_URI'       => "/api/v1/user/{$existing_user->id}/",
 		]);
 		$request = Request::createFromEnvironment($env);
-		$request = $request->withAttribute('token', ['user' => ['id' => $new_user->id]]);
+		$request = $request->withAttribute('token', ['data' => (object) ['id' => $existing_user->id]]);
 		$response = new \Slim\Http\Response();
 
 		$response = $action->fetch($request, $response, ['id' => $existing_user->id]);
