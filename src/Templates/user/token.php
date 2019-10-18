@@ -6,9 +6,9 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<script>
 		window.addEventListener("message", function(event) {
-			if (event.origin === 'https://www.lmanager.test' && event.data === "requestToken") {
+			if (event.data === "requestToken") {
 				let token = location.search.replace('?token=', '');
-				event.source.postMessage({ message: "deliverResult", token: token }, 'https://www.lmanager.test');
+				event.source.postMessage({ message: "deliverResult", token: token }, event.origin);
 				window.close();
 			}
 		});

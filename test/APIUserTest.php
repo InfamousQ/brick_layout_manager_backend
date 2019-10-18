@@ -51,6 +51,9 @@ class APIUserTest extends \PHPUnit\Framework\TestCase {
 		$container['user'] = function($container) {
 			return new \InfamousQ\LManager\Services\UserService($container->get('entity'));
 		};
+		$container['module'] = function($container) {
+			return new \InfamousQ\LManager\Services\ModuleService($container->get('entity'));
+		};
 		$container['auth'] = function($container) {
 			return new \InfamousQ\LManager\Services\DummyAuthService($container->get('settings')['social']);
 		};
@@ -90,7 +93,7 @@ class APIUserTest extends \PHPUnit\Framework\TestCase {
 		]);
 		$request = Request::createFromEnvironment($env);
 		$response = new \Slim\Http\Response();
-		$request = $request->withAttribute('token', ['user' => ['id' => $new_user->id]]);
+		$request = $request->withAttribute('token', ['data' => (object) ['id' => $new_user->id]]);
 
 		$response = $action->fetch($request, $response, []);
 		$this->assertSame(\Slim\Http\StatusCode::HTTP_OK, $response->getStatusCode());
@@ -138,7 +141,7 @@ class APIUserTest extends \PHPUnit\Framework\TestCase {
 			'REQUEST_URI'       => "/api/v1/user/{$existing_user->id}/",
 		]);
 		$request = Request::createFromEnvironment($env);
-		$request = $request->withAttribute('token', ['user' => ['id' => $new_user->id]]);
+		$request = $request->withAttribute('token', ['data' => (object) ['id' => $existing_user->id]]);
 		$response = new \Slim\Http\Response();
 
 		$response = $action->fetch($request, $response, ['id' => $existing_user->id]);
@@ -245,5 +248,35 @@ class APIUserTest extends \PHPUnit\Framework\TestCase {
 			'icon' => 'Test provider icon',
 			];
 		$this->assertJsonStringEqualsJsonString(json_encode([$provider_info]), (string) $response->getBody());
+	}
+
+	public function testcreateUserWithModuleAndShowModuleListReturns200() {
+		/** @var User user */
+		$user = $this->container->user->createUserFromArray(['name' => 'Annie Doe', 'email' => 'annie.doe@test.test']);
+		/** @var \InfamousQ\LManager\Models\Module $module */
+		$module = $this->container->module->createModule('Test module #1', $user->id);
+
+		$action = new \InfamousQ\LManager\Actions\APIUserAction($this->container);
+		$env = Environment::mock([
+			'REQUEST_METHOD'    => 'GET',
+			'REQUEST_URI'       => "/api/v1/user/{$user->id}/",
+		]);
+		$request = Request::createFromEnvironment($env);
+		$request = $request->withAttribute('token', ['user' => ['id' => $user->id]]);
+		$response = new \Slim\Http\Response();
+
+		$response = $action->fetch($request, $response, ['id' => $user->id]);
+		$this->assertSame(\Slim\Http\StatusCode::HTTP_OK, $response->getStatusCode());
+		$module_json = new stdClass();
+		$module_json->id = (int) $module->id;
+		$module_json->href = "/api/v1/modules/{$module->id}/";
+		$module_json->name = 'Test module #1';
+		$module_json->created = $module->created_at->format(\DateTimeInterface::RFC3339);
+		$module_json->author = new stdClass();
+		$module_json->author->id = (int) $user->id;
+		$module_json->author->name = $user->name;
+		$module_json->author->href = "/api/v1/users/{$user->id}/";
+		$module_json->public = (bool) $module->public;
+		$this->assertJsonStringEqualsJsonString(json_encode(['id' => (int) $user->id, 'name' => 'Annie Doe', 'href' => "/api/v1/users/{$user->id}/", 'modules' => [$module_json], 'layouts' => []]), (string) $response->getBody());
 	}
 }

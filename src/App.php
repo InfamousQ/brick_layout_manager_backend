@@ -3,6 +3,7 @@
 namespace InfamousQ\LManager;
 
 use Firebase\JWT\JWT;
+use InfamousQ\LManager\Actions\APIModuleAction;
 use InfamousQ\LManager\Actions\GetHomepageAction;
 use InfamousQ\LManager\Actions\GetPingAction;
 use InfamousQ\LManager\Actions\GetUserAuthenticateAction;
@@ -12,7 +13,7 @@ use InfamousQ\LManager\Actions\APIUserAction;
 use InfamousQ\LManager\Services\EntityMapperService;
 use InfamousQ\LManager\Services\HybridAuthService;
 use InfamousQ\LManager\Services\JWTService;
-use InfamousQ\LManager\Services\PDODatabaseService;
+use InfamousQ\LManager\Services\ModuleService;
 use Noodlehaus\Config;
 use Slim\Container;
 use \League\Plates\Engine as Renderer;
@@ -44,9 +45,14 @@ class App {
 		// Set DI components
 		$container = $this->app->getContainer();
 
-		// Register DB connection
+		// Register ORM connection
 		$container['entity'] = function (Container $container) {
 			return new EntityMapperService($container->get('settings')['db']);
+		};
+
+		// Register module service
+		$container['module'] = function (Container $container) {
+			return new ModuleService($container->get('entity'));
 		};
 
 		// Register user service
@@ -96,6 +102,15 @@ class App {
 				$this->get('/providers', APIUserAction::class.':providers');
 				$this->get('/[{id}]', APIUserAction::class.':fetch');
 				$this->post('/{id}', APIUserAction::class.':update');
+			});
+
+			$this->group('/modules', function () {
+				$this->get('/', APIModuleAction::class.':fetchList');
+				$this->post('/', APIModuleAction::class.':insert');
+				$this->get('/{id}', APIModuleAction::class.'fetchSingle');
+				$this->put('/{id}', APIModuleAction::class.'editSingle');
+				$this->get('/{id}/plates', APIModuleAction::class.'fetchSinglePlates');
+				$this->patch('/{id}/plates', APIModuleAction::class.'editSinglePlates');
 			});
 
 		})->add(new \Tuupola\Middleware\JwtAuthentication([

@@ -9,6 +9,8 @@ use \Slim\Http\StatusCode;
 
 class APIUserAction {
 
+	use readsUserDataFromToken;
+
 	/** @var \InfamousQ\LManager\Services\UserServiceInterface $user_service */
 	protected $user_service;
 	/** @var \InfamousQ\LManager\Services\AuthenticationServiceInterface $auth_service */
@@ -20,19 +22,16 @@ class APIUserAction {
 	}
 
 	public function fetch(Request $request, Response $response, array $args = array()) {
-		$decoded_token = $request->getAttribute('token', null);
-		$user_data = null;
-		if (is_array($decoded_token)) {
-			$user_data = (array_key_exists('user', $decoded_token)) ? $decoded_token['user'] : null;
-		}
-		if (null === $decoded_token || null === $user_data) {
+		try {
+			$this->getUserDataFromToken($request);
+		} catch (\InvalidArgumentException $e) {
 			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
 		}
 
 		if (array_key_exists('id', $args)) {
 			$target_user_id = $args['id'];
 		} else {
-			$target_user_id = $user_data['id'];
+			$target_user_id = $this->token_user_data->id;
 		}
 
 		// Find user that was provided by token's meta data.
@@ -47,12 +46,9 @@ class APIUserAction {
 	 * @return Response
 	 */
 	public function update(Request $request, Response $response, array $args = array()) {
-		$decoded_token = $request->getAttribute('token', null);
-		$user_data = null;
-		if (is_array($decoded_token)) {
-			$user_data = (array_key_exists('user', $decoded_token)) ? $decoded_token['user'] : null;
-		}
-		if (null === $decoded_token || null === $user_data) {
+		try {
+			$this->getUserDataFromToken($request);
+		} catch (\InvalidArgumentException $e) {
 			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
 		}
 

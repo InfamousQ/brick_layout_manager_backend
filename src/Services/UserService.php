@@ -35,6 +35,17 @@ class UserService implements UserServiceInterface {
 		}
 	}
 
+	public function createUserFromArray(array $input) {
+		/** @var User $entity */
+		$entity = null;
+		try {
+			$entity = $this->mapper->create(['name' => $input['name'], 'email' => $input['email']]);
+			return $entity;
+		} catch (\Spot\Exception $exception) {
+			error_log($exception->getMessage());
+			return false;
+		}	}
+
 	public function getUserById($user_id) {
 		$entity = $this->mapper->get($user_id);
 		if ($entity === false) {
