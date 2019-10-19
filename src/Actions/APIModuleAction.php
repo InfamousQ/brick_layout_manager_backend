@@ -49,7 +49,7 @@ class APIModuleAction {
 		$new_module = $this->module_service->createModule($allowed_json_fields['name'], $current_user->id);
 		if (null === $new_module) {
 			// TODO: send error
-			error_log('fail!');
+			error_log('module creation fail!');
 		}
 		return $response->withJson(APIModuleMapper::getJSON($new_module), StatusCode::HTTP_OK);
 	}

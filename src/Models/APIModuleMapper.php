@@ -39,4 +39,14 @@ class APIModuleMapper {
 			];
 	}
 
+	public static function getLayoutModulesJSON(Module $module) {
+		return [
+			'id' => (int) $module->id,
+			'href' => '/api/v1/modules/' . $module->id . '/',
+			'name' => $module->name,
+			'public' => (bool) $module->public,
+			'created' => $module->created_at->format(\DateTimeInterface::RFC3339),
+		];
+	}
+
 }

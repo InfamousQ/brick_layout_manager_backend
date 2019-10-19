@@ -3,6 +3,7 @@
 namespace InfamousQ\LManager;
 
 use Firebase\JWT\JWT;
+use InfamousQ\LManager\Actions\APILayoutAction;
 use InfamousQ\LManager\Actions\APIModuleAction;
 use InfamousQ\LManager\Actions\GetHomepageAction;
 use InfamousQ\LManager\Actions\GetPingAction;
@@ -111,6 +112,13 @@ class App {
 				$this->put('/{id}', APIModuleAction::class.'editSingle');
 				$this->get('/{id}/plates', APIModuleAction::class.'fetchSinglePlates');
 				$this->patch('/{id}/plates', APIModuleAction::class.'editSinglePlates');
+			});
+
+			$this->group('/layouts', function () {
+				$this->get('/', APILayoutAction::class.':fetchList');
+				$this->post('/', APILayoutAction::class.':insert');
+				$this->get('/{id}', APILayoutAction::class.':fetchSingle');
+				$this->put('/{id}', APILayoutAction::class.'editSingle');
 			});
 
 		})->add(new \Tuupola\Middleware\JwtAuthentication([
