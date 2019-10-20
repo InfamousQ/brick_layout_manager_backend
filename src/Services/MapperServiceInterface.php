@@ -11,4 +11,5 @@ interface MapperServiceInterface{
 	 */
 	public static function getMapper($entity_name) : \Spot\MapperInterface;
 
+	public static function closeConnectionToDB();
 }

@@ -21,4 +21,9 @@ class EntityMapperService implements MapperServiceInterface {
 	public static function getMapper($entity_name): \Spot\MapperInterface {
 		return self::$mapper_instance->mapper($entity_name);
 	}
+
+	public static function closeConnectionToDB() {
+		self::$mapper_instance->config()->connection('pgsql')->close();
+		return true;
+	}
 }

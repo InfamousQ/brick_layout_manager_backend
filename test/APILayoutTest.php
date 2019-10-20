@@ -66,6 +66,7 @@ class APILayoutTest extends \PHPUnit\Framework\TestCase {
 
 	public function tearDown(){
 		self::$T->getRollback("test", "0");
+		$this->container->entity->closeConnectionToDB();
 	}
 
 	public function testNoLayoutsAtAllReturns200() {
