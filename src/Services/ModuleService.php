@@ -20,7 +20,7 @@ class ModuleService {
 	protected $plate_mapper;
 	/** @var MapperInterface $layout_mapper */
 	protected $layout_mapper;
-	/** @var MapperInterface$layout_module_mapper */
+	/** @var MapperInterface $layout_module_mapper */
 	protected $layout_module_mapper;
 
 	public function __construct(MapperServiceInterface $mapper_service) {
@@ -99,7 +99,11 @@ class ModuleService {
 		return $layout_query->execute();
 	}
 
-	public function connectModuleToLayout(Module $module, Layout $layout) {
+	public function updateLayout(Layout $layout) {
+		$this->layout_mapper->update($layout, ['relations' => true,]);
+	}
+
+	public function connectModuleToLayout(Layout $layout, Module $module, $x, $y) {
 		$matching_links = $this->layout_module_mapper->where(['layout_id' => $layout->id, 'module_id' => $module->id]);
 		if ($matching_links->count() == 1) {
 			// Connection found, return true
@@ -107,7 +111,27 @@ class ModuleService {
 		}
 		// Connection not found, create connection
 		try {
-			$this->layout_module_mapper->create(['layout_id' => $layout->id, 'module_id' => $module->id]);
+			$this->layout_module_mapper->create(['layout_id' => $layout->id, 'module_id' => $module->id, 'x' => $x, 'y' => $y]);
+			return true;
+		} catch (\Exception $exception) {
+			error_log($exception->getMessage());
+			return false;
+		}
+	}
+
+	public function saveModuleInLayout(LayoutModule $layout_module) {
+		try {
+			$this->layout_module_mapper->save($layout_module);
+			return true;
+		} catch (\Exception $exception) {
+			error_log($exception->getMessage());
+			return false;
+		}
+	}
+
+	public function deleteModuleInLayout(LayoutModule $layout_module) {
+		try {
+			$this->layout_module_mapper->delete(['id' => (int) $layout_module->id]);
 			return true;
 		} catch (\Exception $exception) {
 			error_log($exception->getMessage());

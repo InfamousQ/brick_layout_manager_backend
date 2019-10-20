@@ -32,7 +32,7 @@ class Layout extends \Spot\Entity {
 	public static function relations(MapperInterface $mapper, EntityInterface $entity) {
 		return [
 			'user'      => $mapper->belongsTo($entity, User::class, 'user_id'),
-			'modules'   => $mapper->hasManyThrough($entity, Module::class, LayoutModule::class, 'module_id', 'layout_id'),
+			'modules'   => $mapper->hasMany($entity, LayoutModule::class,  'layout_id'),
 		];
 	}
 }
