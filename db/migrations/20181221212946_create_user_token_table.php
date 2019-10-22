@@ -10,7 +10,7 @@ class CreateUserTokenTable extends AbstractMigration {
 			->addColumn('user_id', 'integer')
 			->addColumn('adapter_type', 'integer')
 			->addColumn('access_token', 'string')
-			->addForeignKey(['user_id'], 'user')
+			->addForeignKey(['user_id'], 'users')
 			->addIndex(['user_id', 'adapter_type'], ['unique' => true])
 			->addTimestamps()
 			->create();

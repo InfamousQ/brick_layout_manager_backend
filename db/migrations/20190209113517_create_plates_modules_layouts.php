@@ -18,7 +18,7 @@ class CreatePlatesModulesLayouts extends AbstractMigration {
 			->addColumn('name', 'string')
 			->addColumn('public', 'boolean', ['default' => true])
 			->addColumn('user_id', 'integer')
-			->addForeignKey('user_id', 'user', 'id', ['delete' => 'CASCADE'])
+			->addForeignKey('user_id', 'users', 'id', ['delete' => 'CASCADE'])
 			->addTimestamps()
 			->create();
 
@@ -40,7 +40,7 @@ class CreatePlatesModulesLayouts extends AbstractMigration {
 		$layout_table
 			->addColumn('name', 'string')
 			->addColumn('user_id', 'integer')
-			->addForeignKey('user_id', 'user', 'id', ['delete' => 'SET_NULL'])
+			->addForeignKey('user_id', 'users', 'id', ['delete' => 'SET_NULL'])
 			->addTimestamps()
 			->create();
 

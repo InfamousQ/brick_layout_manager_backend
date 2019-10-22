@@ -17,7 +17,7 @@ use Spot\MapperInterface;
 
 class User extends \Spot\Entity {
 
-	protected static $table = 'user';
+	protected static $table = 'users';
 	public static function fields() {
 		return [
 			'id'    => ['type' => 'integer', 'primary' => true, 'autoincrement' => true],
