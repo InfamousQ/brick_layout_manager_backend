@@ -682,10 +682,9 @@ class APILayoutTest extends \PHPUnit\Framework\TestCase {
 		$this->assertJsonStringEqualsJsonString( json_encode($layout_json) , (string) $response->getBody());
 	}
 
-	// TODO: Delete owned module from layout
 	public function testDELETEOwnedLayoutsOwnedModuleReturns200() {
 		/** @var User $user */
-		$user = $this->container->user->createUserFromArray(['name' => 'William Doe', 'email' => 'william.doe@test.test']);
+		$user = $this->container->user->createUserFromArray(['name' => 'Annie Doe', 'email' => 'annie.doe@test.test']);
 		/** @var Layout $layout */
 		$layout = $this->container->module->createLayout('Existing layout', $user->id);
 		/** @var Module $module */
@@ -718,5 +717,40 @@ class APILayoutTest extends \PHPUnit\Framework\TestCase {
 		$this->assertJsonStringEqualsJsonString(json_encode($layout_json), (string)$response->getBody());
 	}
 
-	// TODO: Delete not owned module from layout
+	public function testDELETEOwnedLayoutsSomeModuleReturns200() {
+		/** @var User $active_user */
+		$active_user = $this->container->user->createUserFromArray(['name' => 'Burt Doe', 'email' => 'burt.doe@test.test']);
+		/** @var User $author_user */
+		$author_user = $this->container->user->createUserFromArray(['name' => 'Carl Doe', 'email' => 'carl.doe@test.test']);
+		/** @var Layout $layout */
+		$layout = $this->container->module->createLayout('Burt\'s layout', $active_user->id);
+		/** @var Module $module */
+		$module = $this->container->module->createModule('Test module', $author_user->id);
+		$this->container->module->connectModuleToLayout($layout, $module, 11, 22);
+		$this->assertSame(1, count($layout->modules));
+
+		$action = new APILayoutAction($this->container);
+		$env = Environment::mock([
+			'REQUEST_METHOD' => 'DELETE',
+			'REQUEST_URI' => "/api/v1/layouts/{$layout->id}/modules/{$module->id}/",
+		]);
+		$request = Request::createFromEnvironment($env);
+		$request = $request->withAttribute('token', ['data' => (object)['id' => $active_user->id]]);
+		$response = new Response();
+
+		$response = $action->deleteModuleInLayout($request, $response, ['id' => $layout->id, 'module_id' => (int)$module->id]);
+		$this->assertSame(StatusCode::HTTP_OK, $response->getStatusCode());
+		$layout_json = new stdClass();
+		$layout_json->id = (int) $layout->id;
+		$layout_json->href = "/api/v1/layouts/{$layout->id}/";
+		$layout_json->name = 'Burt\'s layout';
+		$layout_json->public = $layout->public;
+		$layout_json->created = $layout->created_at->format(\DateTimeInterface::RFC3339);
+		$layout_json->author = new stdClass();
+		$layout_json->author->id = (int)$active_user->id;
+		$layout_json->author->name = $active_user->name;
+		$layout_json->author->href = "/api/v1/users/{$active_user->id}/";
+		$layout_json->modules = [];
+		$this->assertJsonStringEqualsJsonString(json_encode($layout_json), (string)$response->getBody());
+	}
 }
