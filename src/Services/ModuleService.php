@@ -3,6 +3,7 @@
 namespace InfamousQ\LManager\Services;
 
 use InfamousQ\LManager\Models\LayoutModule;
+use Spot\Entity\Collection;
 use \Spot\MapperInterface;
 use InfamousQ\LManager\Models\Module;
 use InfamousQ\LManager\Models\Color;
@@ -19,7 +20,7 @@ class ModuleService {
 	protected $plate_mapper;
 	/** @var MapperInterface $layout_mapper */
 	protected $layout_mapper;
-	/** @var MapperInterface$layout_module_mapper */
+	/** @var MapperInterface $layout_module_mapper */
 	protected $layout_module_mapper;
 
 	public function __construct(MapperServiceInterface $mapper_service) {
@@ -31,12 +32,34 @@ class ModuleService {
 	}
 
 	// Layout functions
+
+	/**
+	 * Create new Layout based on given $name and $user_id
+	 * @param string $name Name for the layout
+	 * @param int $user_id Id of author User
+	 * @return bool|Layout Created Layout or false
+	 */
 	public function createLayout($name, $user_id) {
 		/** @var Layout $entity */
 		$entity = null;
 		try {
 			$entity = $this->layout_mapper->create(['name' => $name, 'user_id' => $user_id]);
 			return $entity;
+		} catch (\Exception $exception) {
+			error_log($exception->getMessage());
+			return false;
+		}
+	}
+
+	/**
+	 * Save given $layout to DB
+	 * @param Layout $layout
+	 * @return bool Was data saved?
+	 */
+	public function saveLayout(Layout $layout) {
+		try {
+			$this->layout_mapper->save($layout);
+			return true;
 		} catch (\Exception $exception) {
 			error_log($exception->getMessage());
 			return false;
@@ -57,7 +80,30 @@ class ModuleService {
 		return (bool) $this->layout_mapper->delete(['id' => $layout_id]);
 	}
 
-	public function connectModuleToLayout(Module $module, Layout $layout) {
+	/**
+	 * Get all public Layouts
+	 * @return Collection Layout
+	 */
+	public function getPublicLayouts() {
+		/** @var Collection $public_layouts */
+		$public_layouts = $this->layout_mapper->select()->where(['public' => true])->order(['updated_at' => 'DESC'])->execute();
+		return $public_layouts;
+	}
+
+	public function getLayouts(int $filter_by_user_id = null) {
+		$layout_query = $this->layout_mapper->select();
+		if (null !== $filter_by_user_id) {
+			$layout_query->where(['user_id' => (int) $filter_by_user_id]);
+		}
+		$layout_query->order(['updated_at' => 'DESC']);
+		return $layout_query->execute();
+	}
+
+	public function updateLayout(Layout $layout) {
+		$this->layout_mapper->update($layout, ['relations' => true,]);
+	}
+
+	public function connectModuleToLayout(Layout $layout, Module $module, $x, $y) {
 		$matching_links = $this->layout_module_mapper->where(['layout_id' => $layout->id, 'module_id' => $module->id]);
 		if ($matching_links->count() == 1) {
 			// Connection found, return true
@@ -65,7 +111,27 @@ class ModuleService {
 		}
 		// Connection not found, create connection
 		try {
-			$this->layout_module_mapper->create(['layout_id' => $layout->id, 'module_id' => $module->id]);
+			$this->layout_module_mapper->create(['layout_id' => $layout->id, 'module_id' => $module->id, 'x' => $x, 'y' => $y]);
+			return true;
+		} catch (\Exception $exception) {
+			error_log($exception->getMessage());
+			return false;
+		}
+	}
+
+	public function saveModuleInLayout(LayoutModule $layout_module) {
+		try {
+			$this->layout_module_mapper->save($layout_module);
+			return true;
+		} catch (\Exception $exception) {
+			error_log($exception->getMessage());
+			return false;
+		}
+	}
+
+	public function deleteModuleInLayout(LayoutModule $layout_module) {
+		try {
+			$this->layout_module_mapper->delete(['id' => (int) $layout_module->id]);
 			return true;
 		} catch (\Exception $exception) {
 			error_log($exception->getMessage());
@@ -129,10 +195,10 @@ class ModuleService {
 
 	/**
 	 * Fetch all Modules that are set public
-	 * @return \Spot\Entity\Collection
+	 * @return Collection
 	 */
 	public function getPublicModules() {
-		/** @var \Spot\Entity\Collection $public_modules */
+		/** @var Collection $public_modules */
 		$public_modules = $this->mapper->select()->where(['public' => true])->order(['updated_at' => 'DESC'])->execute();
 		return $public_modules;
 	}

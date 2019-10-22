@@ -151,7 +151,7 @@ class ModuleServiceTest extends \PHPUnit\Framework\TestCase {
 		$module = $this->module_service->createModule('Test module #4', $author_user->id);
 		$this->module_service->saveModule($module);
 
-		$this->assertTrue($this->module_service->connectModuleToLayout($module, $layout));
+		$this->assertTrue($this->module_service->connectModuleToLayout($layout, $module,5, 8));
 		$layout = $this->module_service->getLayoutById($layout->id);
 		$this->assertSame(1, $layout->modules->count(), 'Layout has module');
 		$this->assertTrue($module->id == $layout->modules[0]->id, 'Layout\'s module is created module');
@@ -165,7 +165,7 @@ class ModuleServiceTest extends \PHPUnit\Framework\TestCase {
 		$author_user = $this->user_service->createUserFromArray(['name' => 'Test user 6', 'email' => 'test6@test.test']);
 		$layout = $this->module_service->createLayout('Demo layout 3', $author_user->id);
 		$module = $this->module_service->createModule('Test module #5', $author_user->id);
-		$this->module_service->connectModuleToLayout($module, $layout);
+		$this->module_service->connectModuleToLayout( $layout, $module, 10, 20);
 
 		$layout = $this->module_service->getLayoutById($layout->id);
 		$module = $this->module_service->getModuleById($module->id);

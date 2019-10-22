@@ -8,6 +8,7 @@ use \InfamousQ\Lmanager\Models\Color;
 use Slim\Http\Environment;
 use Slim\Http\Request;
 use Slim\Http\Response;
+use Slim\Http\StatusCode;
 
 class APIModuleTest extends \PHPUnit\Framework\TestCase {
 
@@ -66,6 +67,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 
 	public function tearDown(){
 		self::$T->getRollback("test", "0");
+		$this->container->entity->closeConnectionToDB();
 	}
 
 	public function testNoModuleAtAllReturns200() {
@@ -79,10 +81,10 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		]);
 		$request = Request::createFromEnvironment($env);
 		$request = $request->withAttribute('token', ['data' => (object) ['id' => $user->id]]);
-		$response = new \Slim\Http\Response();
+		$response = new Response();
 
 		$response = $action->fetchList($request, $response);
-		$this->assertSame(\Slim\Http\StatusCode::HTTP_OK, $response->getStatusCode());
+		$this->assertSame(StatusCode::HTTP_OK, $response->getStatusCode());
 		$this->assertJsonStringEqualsJsonString( json_encode([]), (string) $response->getBody(), 'No modules set, response is empty');
 	}
 
@@ -98,10 +100,10 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		]);
 		$request = Request::createFromEnvironment($env);
 		$request = $request->withAttribute('token', ['data' => (object) ['id' => $user->id]]);
-		$response = new \Slim\Http\Response();
+		$response = new Response();
 
 		$response = $action->fetchList($request, $response);
-		$this->assertSame(\Slim\Http\StatusCode::HTTP_OK, $response->getStatusCode());
+		$this->assertSame(StatusCode::HTTP_OK, $response->getStatusCode());
 		$module_json = new stdClass();
 		$module_json->id = (int) $module->id;
 		$module_json->href = "/api/v1/modules/{$module->id}/";
@@ -129,7 +131,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$response = new Response();
 
 		$response = $action->insert($request, $response);
-		$this->assertSame(\Slim\Http\StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode(), 'Without token, return 401');
+		$this->assertSame(StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode(), 'Without token, return 401');
 		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Invalid token']]), (string) $response->getBody());
 	}
 
@@ -156,7 +158,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 			'href' => '/api/v1/modules/1/',
 			'name' => 'Uploaded module #1',
 		];
-		$this->assertSame(\Slim\Http\StatusCode::HTTP_OK, $response->getStatusCode());
+		$this->assertSame(StatusCode::HTTP_OK, $response->getStatusCode());
 		$response_array = array_intersect_key(json_decode((string) $response->getBody(), true), $module_array);
 		$this->assertEquals($module_array, $response_array, 'Module saved successfully');
 
@@ -179,7 +181,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$module_json->author->id = (int) $user->id;
 		$module_json->author->name = $user->name;
 		$module_json->author->href = "/api/v1/users/{$user->id}/";
-		$this->assertSame(\Slim\Http\StatusCode::HTTP_OK, $response->getStatusCode());
+		$this->assertSame(StatusCode::HTTP_OK, $response->getStatusCode());
 		$this->assertJsonStringEqualsJsonString( json_encode([$module_json]), (string) $response->getBody(), 'Module shows in list' );
 	}
 
@@ -197,7 +199,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$response = new \Slim\Http\Response();
 
 		$response = $action->fetchSingle($request, $response);
-		$this->assertSame(\Slim\Http\StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode());
+		$this->assertSame(StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode());
 		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Invalid token']]), (string) $response->getBody());
 	}
 
@@ -217,7 +219,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$response = new \Slim\Http\Response();
 
 		$response = $action->fetchSingle($request, $response, ['id' => $module->id]);
-		$this->assertSame(\Slim\Http\StatusCode::HTTP_OK, $response->getStatusCode());
+		$this->assertSame(StatusCode::HTTP_OK, $response->getStatusCode());
 		$module_json = new stdClass();
 		$module_json->id = (int) $module->id;
 		$module_json->href = "/api/v1/modules/{$module->id}/";
@@ -251,7 +253,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$response = new Response();
 
 		$response = $action->editSingle($request, $response, ['id' => $module->id]);
-		$this->assertSame(\Slim\Http\StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode());
+		$this->assertSame(StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode());
 		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Invalid token']]), (string) $response->getBody());
 	}
 
@@ -276,7 +278,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$response = new Response();
 
 		$response = $action->editSingle($request, $response, ['id' => $module->id]);
-		$this->assertSame(\Slim\Http\StatusCode::HTTP_OK, $response->getStatusCode());
+		$this->assertSame(StatusCode::HTTP_OK, $response->getStatusCode());
 		$edited_module_json = new stdClass();
 		$edited_module_json->id = (int) $module->id;
 		$edited_module_json->href = "/api/v1/modules/{$module->id}/";
@@ -298,7 +300,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 
 		$action = new APIModuleAction($this->container);
 		$env = Environment::mock([
-			'REQUEST_METHOD'    => 'PUT',
+			'REQUEST_METHOD'    => 'DELETE',
 			'REQUEST_URI'       => "/api/v1/modules/{$module->id}/",
 		]);
 		$new_request_body = new \Slim\Http\RequestBody();
@@ -310,7 +312,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$response = new Response();
 
 		$response = $action->deleteSingle($request, $response, ['id' => $module->id]);
-		$this->assertSame(\Slim\Http\StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode());
+		$this->assertSame(StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode());
 		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Invalid token']]), (string) $response->getBody());
 	}
 
@@ -329,7 +331,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$response = new \Slim\Http\Response();
 
 		$response = $action->deleteSingle($request, $response, ['id' => $invalid_module_id]);
-		$this->assertSame(\Slim\Http\StatusCode::HTTP_NOT_FOUND, $response->getStatusCode());
+		$this->assertSame(StatusCode::HTTP_NOT_FOUND, $response->getStatusCode());
 		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Module not found']]), (string) $response->getBody());
 	}
 
@@ -351,7 +353,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$response = new \Slim\Http\Response();
 
 		$response = $action->deleteSingle($request, $response, ['id' => $module->id]);
-		$this->assertSame(\Slim\Http\StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode());
+		$this->assertSame(StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode());
 		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Not owner']]), (string) $response->getBody());
 	}
 
@@ -370,7 +372,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$response = new \Slim\Http\Response();
 
 		$response = $action->fetchSinglePlates($request, $response);
-		$this->assertSame(\Slim\Http\StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode());
+		$this->assertSame(StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode());
 		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Invalid token']]), (string) $response->getBody());
 	}
 
@@ -389,7 +391,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$response = new \Slim\Http\Response();
 
 		$response = $action->fetchSinglePlates($request, $response, ['id' => $invalid_module_id]);
-		$this->assertSame(\Slim\Http\StatusCode::HTTP_NOT_FOUND, $response->getStatusCode());
+		$this->assertSame(StatusCode::HTTP_NOT_FOUND, $response->getStatusCode());
 		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Module not found']]), (string) $response->getBody());
 	}
 
@@ -417,7 +419,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$response = new \Slim\Http\Response();
 
 		$response = $action->fetchSinglePlates($request, $response, ['id' => $module->id]);
-		$this->assertSame(\Slim\Http\StatusCode::HTTP_OK, $response->getStatusCode());
+		$this->assertSame(StatusCode::HTTP_OK, $response->getStatusCode());
 		$white_plate_json = new stdClass();
 		$white_plate_json->id = (int) $white_plate->id;
 		$white_plate_json->x = 1;
@@ -463,7 +465,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$response = $response->withBody($new_request_body);
 
 		$response = $action->addPlate($request, $response, ['id' => $module->id]);
-		$this->assertSame(\Slim\Http\StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode());
+		$this->assertSame(StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode());
 		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Invalid token']]), (string) $response->getBody());
 	}
 
@@ -485,7 +487,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$response = new \Slim\Http\Response();
 
 		$response = $action->fetchSinglePlates($request, $response, ['id' => $invalid_module_id]);
-		$this->assertSame(\Slim\Http\StatusCode::HTTP_NOT_FOUND, $response->getStatusCode());
+		$this->assertSame(StatusCode::HTTP_NOT_FOUND, $response->getStatusCode());
 		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Module not found']]), (string) $response->getBody());
 	}
 
@@ -511,7 +513,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$response = new \Slim\Http\Response();
 
 		$response = $action->addPlate($request, $response, ['id' => $module->id]);
-		$this->assertSame(\Slim\Http\StatusCode::HTTP_OK, $response->getStatusCode());
+		$this->assertSame(StatusCode::HTTP_OK, $response->getStatusCode());
 		$plate_json = new stdClass();
 		$plate_json->id = 1;
 		$plate_json->x = 31;
@@ -534,7 +536,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$response = new \Slim\Http\Response();
 
 		$response = $action->fetchSinglePlates($request, $response, ['id' => $module->id]);
-		$this->assertSame(\Slim\Http\StatusCode::HTTP_OK, $response->getStatusCode());
+		$this->assertSame(StatusCode::HTTP_OK, $response->getStatusCode());
 		$this->assertJsonStringEqualsJsonString( json_encode([$plate_json]), (string) $response->getBody(), 'Generated plate found from GET');
 	}
 }
