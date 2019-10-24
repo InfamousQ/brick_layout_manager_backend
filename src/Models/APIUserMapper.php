@@ -8,7 +8,11 @@ class APIUserMapper {
 		foreach ($user->modules as $module) {
 			$user_modules_json[] = APIModuleMapper::getUserModulesJSON($module);
 		}
-		return ['id' => (int) $user->id, 'name' => $user->name, 'href' => '/api/v1/users/' . $user->id . '/', 'modules' => $user_modules_json, 'layouts' => []];
+		$user_layouts_json = [];
+		foreach ($user->layouts as $layout) {
+			$user_layouts_json[] = APILayoutMapper::getSummaryJSON($layout);
+		}
+		return ['id' => (int) $user->id, 'name' => $user->name, 'href' => '/api/v1/users/' . $user->id . '/', 'modules' => $user_modules_json, 'layouts' => $user_layouts_json];
 	}
 
 	public static function getModuleAuthorSummary($user) {

@@ -30,7 +30,7 @@ class User extends \Spot\Entity {
 		return [
 			'tokens'    => $mapper->hasMany($entity, UserToken::class, 'user_id'),
 			'modules'   => $mapper->hasMany($entity, Module::class, 'user_id'),
-			'layouts'   => $mapper->hasManyThrough($entity, Layout::class, LayoutModule::class, 'layout_id', 'id'),
+			'layouts'   => $mapper->hasMany($entity, Layout::class, 'user_id'),
 		];
 	}
 }
