@@ -2,6 +2,7 @@
 
 namespace InfamousQ\LManager\Actions;
 
+use Hybridauth\Exception\NotImplementedException;
 use InfamousQ\LManager\Models\APIModuleMapper;
 use InfamousQ\LManager\Models\APIPlatesMapper;
 use \Slim\Http\Response;
@@ -139,7 +140,7 @@ class APIModuleAction {
 		}
 	}
 
-	public function fetchSinglePlates(Request $request, Response $response, array $args = array()) {
+	public function fetchPlateList(Request $request, Response $response, array $args = array()) {
 
 		try {
 			$this->getUserDataFromToken($request);
@@ -165,7 +166,7 @@ class APIModuleAction {
 		return $response->withJson(APIPlatesMapper::getModulePlatesJSON($target_module),StatusCode::HTTP_OK);
 	}
 
-	public function addPlate(Request $request, Response $response, array $args = array()) {
+	public function insertPlate(Request $request, Response $response, array $args = array()) {
 
 		try {
 			$this->getUserDataFromToken($request);
@@ -189,7 +190,10 @@ class APIModuleAction {
 		}
 
 		$json_fields = $request->getParsedBody();
-		$allowed_plate_field_keys = ['x', 'y', 'z', 'h', 'w', 'color'];
+		if (empty($json_fields)) {
+			return $response->withJson(['error' => ['message' => 'Invalid content']], StatusCode::HTTP_BAD_REQUEST);
+		}
+		$allowed_plate_field_keys = ['x', 'y', 'z', 'h', 'w', 'color_id'];
 		$allowed_json_fields = array_intersect_key($json_fields, array_flip($allowed_plate_field_keys));
 		$allowed_json_fields['module'] = $target_module->id;
 		$target_plate = $this->module_service->createPlate(
@@ -198,12 +202,107 @@ class APIModuleAction {
 			(int) $allowed_json_fields['z'],
 			(int) $allowed_json_fields['h'],
 			(int) $allowed_json_fields['w'],
-			(int) $allowed_json_fields['color'],
+			(int) $allowed_json_fields['color_id'],
 			(int) $allowed_json_fields['module']
 			);
 		if (null == $target_plate) {
 			return $response->withJson(['error' => ['message' => 'Plate saving failed']], StatusCode::HTTP_BAD_REQUEST);
 		}
 		return $response->withJson(APIPlatesMapper::getJSON($target_plate), StatusCode::HTTP_OK);
+	}
+
+	public function editPlate(Request $request, Response $response, array $args = []) {
+
+		try {
+			$this->getUserDataFromToken($request);
+		} catch (\InvalidArgumentException $e) {
+			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
+		}
+
+		$current_user = $this->user_service->getUserById($this->token_user_data->id);
+		if (null === $current_user) {
+			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
+		}
+
+		if (!array_key_exists('id', $args)) {
+			return $response->withJson(['error' => ['message' => 'Module not found']], StatusCode::HTTP_NOT_FOUND);
+		}
+
+		$target_module_id = (int) $args['id'];
+		$target_module = $this->module_service->getModuleById($target_module_id);
+		if (null === $target_module) {
+			return $response->withJson(['error' => ['message' => 'Module not found']], StatusCode::HTTP_NOT_FOUND);
+		}
+
+		if (!array_key_exists('plate_id', $args)) {
+			return $response->withJson(['error' => ['message' => 'Module not found']], StatusCode::HTTP_NOT_FOUND);
+		}
+
+		$target_plate_id = (int) $args['plate_id'];
+		$target_plate = $this->module_service->getPlateById($target_plate_id);
+		if (null === $target_plate) {
+			return $response->withJson(['error' => ['message' => 'Plate not found']], StatusCode::HTTP_NOT_FOUND);
+		}
+		if ($target_plate->module->id !== $target_module_id) {
+			return $response->withJson(['error' => ['message' => 'Plate not found']], StatusCode::HTTP_NOT_FOUND);
+		}
+
+		$json_fields = $request->getParsedBody();
+		if (empty($json_fields)) {
+			return $response->withJson(['error' => ['message' => 'Invalid content']], StatusCode::HTTP_BAD_REQUEST);
+		}
+		$allowed_plate_field_keys = ['x', 'y', 'z', 'h', 'w', 'color_id'];
+		$allowed_json_fields = array_intersect_key($json_fields, array_flip($allowed_plate_field_keys));
+		foreach ($allowed_json_fields as $field => $value) {
+			$target_plate->$field = $value;
+		}
+		if (!$this->module_service->savePlate($target_plate)) {
+			return $response->withJson(['error' => ['message' => 'Plate saving failed']], StatusCode::HTTP_BAD_REQUEST);
+		}
+		// Force refresh to update color relationship
+		$target_plate = $this->module_service->getPlateById($target_plate_id);
+		return $response->withJson(APIPlatesMapper::getJSON($target_plate), StatusCode::HTTP_OK);
+	}
+
+	public function deletePlate(Request $request, Response $response, array $args = []) {
+
+		try {
+			$this->getUserDataFromToken($request);
+		} catch (\InvalidArgumentException $e) {
+			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
+		}
+
+		$current_user = $this->user_service->getUserById($this->token_user_data->id);
+		if (null === $current_user) {
+			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
+		}
+
+		if (!array_key_exists('id', $args)) {
+			return $response->withJson(['error' => ['message' => 'Module not found']], StatusCode::HTTP_NOT_FOUND);
+		}
+
+		$target_module_id = (int) $args['id'];
+		$target_module = $this->module_service->getModuleById($target_module_id);
+		if (null === $target_module) {
+			return $response->withJson(['error' => ['message' => 'Module not found']], StatusCode::HTTP_NOT_FOUND);
+		}
+
+		if (!array_key_exists('plate_id', $args)) {
+			return $response->withJson(['error' => ['message' => 'Module not found']], StatusCode::HTTP_NOT_FOUND);
+		}
+
+		$target_plate_id = (int) $args['plate_id'];
+		$target_plate = $this->module_service->getPlateById($target_plate_id);
+		if (null === $target_plate) {
+			return $response->withJson(['error' => ['message' => 'Plate not found']], StatusCode::HTTP_NOT_FOUND);
+		}
+		if ($target_plate->module->id !== $target_module_id) {
+			return $response->withJson(['error' => ['message' => 'Plate not found']], StatusCode::HTTP_NOT_FOUND);
+		}
+
+		if (!$this->module_service->deletePlateById($target_plate->id)) {
+			return $response->withJson(['error' => ['message' => 'Plate deletion failed']], StatusCode::HTTP_BAD_REQUEST);
+		}
+		return $response->withStatus( StatusCode::HTTP_OK);
 	}
 }

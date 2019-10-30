@@ -3,6 +3,7 @@
 namespace InfamousQ\LManager;
 
 use Firebase\JWT\JWT;
+use InfamousQ\LManager\Actions\APIColorAction;
 use InfamousQ\LManager\Actions\APILayoutAction;
 use InfamousQ\LManager\Actions\APIModuleAction;
 use InfamousQ\LManager\Actions\GetHomepageAction;
@@ -108,10 +109,12 @@ class App {
 			$this->group('/modules', function () {
 				$this->get('/', APIModuleAction::class.':fetchList');
 				$this->post('/', APIModuleAction::class.':insert');
-				$this->get('/{id}', APIModuleAction::class.'fetchSingle');
-				$this->put('/{id}', APIModuleAction::class.'editSingle');
-				$this->get('/{id}/plates', APIModuleAction::class.'fetchSinglePlates');
-				$this->patch('/{id}/plates', APIModuleAction::class.'editSinglePlates');
+				$this->get('/{id}', APIModuleAction::class.':fetchSingle');
+				$this->put('/{id}', APIModuleAction::class.':editSingle');
+				$this->get('/{id}/plates', APIModuleAction::class.':fetchPlateList');
+				$this->post('/{id}/plates', APIModuleAction::class.':insertPlate');
+				$this->put('/{id}/plates/{plate_id}', APIModuleAction::class.':editPlate');
+				$this->delete('/{id}/plates/{plate_id}', APIModuleAction::class.':deletePlate');
 			});
 
 			$this->group('/layouts', function () {
@@ -124,10 +127,12 @@ class App {
 				$this->delete('/{id}/modules/{module_id}', APILayoutAction::class.':deleteModuleInLayout');
 			});
 
+			$this->get('/colors', APIColorAction::class.':fetchList');
+
 		})->add(new \Tuupola\Middleware\JwtAuthentication([
 			'secret' => $this->app->getContainer()->get('settings')['jwt']['key'],
 			'path' => ['/api/v1'],
-			'ignore' => ['/api/v1/ping', '/api/v1/user/providers'],
+			'ignore' => ['/api/v1/ping', '/api/v1/user/providers', '/api/v1/colors'],
 			"error" => function (Response $response, $arguments) {
 				$data["status"] = "error";
 				$data["message"] = $arguments["message"];
