@@ -230,6 +230,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$module_json->author->id = (int) $user->id;
 		$module_json->author->name = $user->name;
 		$module_json->author->href = "/api/v1/users/{$user->id}/";
+		$module_json->plates = [];
 		$this->assertJsonStringEqualsJsonString( json_encode($module_json), (string) $response->getBody(), 'Module set, found from response');
 	}
 
@@ -289,6 +290,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$edited_module_json->author->id = (int) $user->id;
 		$edited_module_json->author->name = $user->name;
 		$edited_module_json->author->href = "/api/v1/users/{$user->id}/";
+		$edited_module_json->plates = [];
 		$this->assertJsonStringEqualsJsonString( json_encode($edited_module_json), (string) $response->getBody());
 	}
 
@@ -371,7 +373,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$request = Request::createFromEnvironment($env);
 		$response = new \Slim\Http\Response();
 
-		$response = $action->fetchSinglePlates($request, $response);
+		$response = $action->fetchPlateList($request, $response);
 		$this->assertSame(StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode());
 		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Invalid token']]), (string) $response->getBody());
 	}
@@ -390,12 +392,12 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$request = $request->withAttribute('token', ['data' => (object) ['id' => $user->id]]);
 		$response = new \Slim\Http\Response();
 
-		$response = $action->fetchSinglePlates($request, $response, ['id' => $invalid_module_id]);
+		$response = $action->fetchPlateList($request, $response, ['id' => $invalid_module_id]);
 		$this->assertSame(StatusCode::HTTP_NOT_FOUND, $response->getStatusCode());
 		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Module not found']]), (string) $response->getBody());
 	}
 
-	public function testFetchingModulesPlatesWithValidDataReturns200() {
+	public function testGETModulesPlatesWithValidDataReturns200() {
 		/** @var User $user */
 		$user = $this->container->user->createUserFromArray(['name' => 'Mary Doe', 'email' => 'mary.doe@test.test']);
 		/** @var Module $module */
@@ -418,7 +420,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$request = $request->withAttribute('token', ['data' => (object) ['id' => $user->id]]);
 		$response = new \Slim\Http\Response();
 
-		$response = $action->fetchSinglePlates($request, $response, ['id' => $module->id]);
+		$response = $action->fetchPlateList($request, $response, ['id' => $module->id]);
 		$this->assertSame(StatusCode::HTTP_OK, $response->getStatusCode());
 		$white_plate_json = new stdClass();
 		$white_plate_json->id = (int) $white_plate->id;
@@ -464,7 +466,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$response = new \Slim\Http\Response();
 		$response = $response->withBody($new_request_body);
 
-		$response = $action->addPlate($request, $response, ['id' => $module->id]);
+		$response = $action->insertPlate($request, $response, ['id' => $module->id]);
 		$this->assertSame(StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode());
 		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Invalid token']]), (string) $response->getBody());
 	}
@@ -486,7 +488,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$request = $request->withAttribute('token', ['data' => (object) ['id' => $user->id]]);
 		$response = new \Slim\Http\Response();
 
-		$response = $action->fetchSinglePlates($request, $response, ['id' => $invalid_module_id]);
+		$response = $action->fetchPlateList($request, $response, ['id' => $invalid_module_id]);
 		$this->assertSame(StatusCode::HTTP_NOT_FOUND, $response->getStatusCode());
 		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Module not found']]), (string) $response->getBody());
 	}
@@ -504,7 +506,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 			'REQUEST_URI'       => "/api/v1/modules/{$module->id}/plates/",
 		]);
 		$new_request_body = new \Slim\Http\RequestBody();
-		$new_request_body->write(json_encode(['x' => 31, 'y' => 32, 'z' => 33, 'h' => 34, 'w' => 35, 'color' => $white_color->id]));
+		$new_request_body->write(json_encode(['x' => 31, 'y' => 32, 'z' => 33, 'h' => 34, 'w' => 35, 'color_id' => $white_color->id]));
 		$request = Request::createFromEnvironment($env);
 		$request = $request
 			->withAttribute('token', ['data' => (object) ['id' => $user->id]])
@@ -512,7 +514,7 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 			->withHeader('Content-Type', 'application/json');
 		$response = new \Slim\Http\Response();
 
-		$response = $action->addPlate($request, $response, ['id' => $module->id]);
+		$response = $action->insertPlate($request, $response, ['id' => $module->id]);
 		$this->assertSame(StatusCode::HTTP_OK, $response->getStatusCode());
 		$plate_json = new stdClass();
 		$plate_json->id = 1;
@@ -535,8 +537,142 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$request = $request->withAttribute('token', ['data' => (object) ['id' => $user->id]]);
 		$response = new \Slim\Http\Response();
 
-		$response = $action->fetchSinglePlates($request, $response, ['id' => $module->id]);
+		$response = $action->fetchPlateList($request, $response, ['id' => $module->id]);
 		$this->assertSame(StatusCode::HTTP_OK, $response->getStatusCode());
 		$this->assertJsonStringEqualsJsonString( json_encode([$plate_json]), (string) $response->getBody(), 'Generated plate found from GET');
+	}
+
+	public function testPUTModulePlatesWithoutTokenReturns401() {
+		/** @var User $user */
+		$user = $this->container->user->createUserFromArray(['name' => 'Robert Doe', 'email' => 'robert.doe@test.test']);
+		/** @var Module $module */
+		$module = $this->container->module->createModule('Test module #10', $user->id);
+		/** @var Color $white_color */
+		$white_color = $this->container->module->createColor('White', '000000');
+		/** @var Plate $white_plate */
+		$white_plate = $this->container->module->createPlate(1, 2, 3, 4, 5, $white_color->id, $module->id);
+		/** @var Color $black_color */
+		$black_color = $this->container->module->createColor('Black', 'FFFFFF');
+		$this->assertSame(1, count($module->plates), 'One plate saved');
+
+		$action = new APIModuleAction($this->container);
+		$env = Environment::mock([
+			'REQUEST_METHOD'    => 'PUT',
+			'REQUEST_URI'       => "/api/v1/modules/{$module->id}/plates/{$white_plate->id}/",
+		]);
+		$new_request_body = new \Slim\Http\RequestBody();
+		$new_request_body->write(json_encode(['x' => 31, 'y' => 32, 'z' => 33, 'h' => 34, 'w' => 35, 'color_id' => $black_color->id]));
+		$request = Request::createFromEnvironment($env);
+		$request = $request
+			->withBody($new_request_body)
+			->withHeader('Content-Type', 'application/json');
+		$response = new \Slim\Http\Response();
+
+		$response = $action->editPlate($request, $response, ['id' => $module->id, 'plate_id' => $white_plate->id]);
+		$this->assertSame(StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode());
+		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Invalid token']]), (string) $response->getBody());
+	}
+
+	public function testPUTModulePlatesWithMismatchingModuleAndPlateIdReturns401() {
+		/** @var User $user */
+		$user = $this->container->user->createUserFromArray(['name' => 'Saul Doe', 'email' => 'saul.doe@test.test']);
+		/** @var Module $module */
+		$module = $this->container->module->createModule('Test module #11', $user->id);
+		/** @var Module $wrong_module */
+		$wrong_module = $this->container->module->createModule('Test module #11 - wrong', $user->id);
+		/** @var Color $white_color */
+		$white_color = $this->container->module->createColor('White', '000000');
+		/** @var Plate $white_plate */
+		$white_plate = $this->container->module->createPlate(1, 2, 3, 4, 5, $white_color->id, $module->id);
+		$this->assertSame(1, count($module->plates), 'One plate saved');
+
+		$action = new APIModuleAction($this->container);
+		$env = Environment::mock([
+			'REQUEST_METHOD'    => 'PUT',
+			'REQUEST_URI'       => "/api/v1/modules/{$wrong_module->id}/plates/{$white_plate->id}/",
+		]);
+		$new_request_body = new \Slim\Http\RequestBody();
+		$new_request_body->write(json_encode(['x' => 31, 'y' => 32, 'z' => 33, 'h' => 34, 'w' => 35, 'color_id' => $white_color->id]));
+		$request = Request::createFromEnvironment($env);
+		$request = $request
+			->withAttribute('token', ['data' => (object) ['id' => $user->id]])
+			->withBody($new_request_body)
+			->withHeader('Content-Type', 'application/json');
+		$response = new \Slim\Http\Response();
+
+		$response = $action->editPlate($request, $response, ['id' => $wrong_module->id, 'plate_id' => $white_plate->id]);
+		$this->assertSame(StatusCode::HTTP_NOT_FOUND, $response->getStatusCode());
+		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Plate not found']]), (string) $response->getBody());
+	}
+
+	public function testPUTModulePlatesWithValidDataReturns200() {
+		/** @var User $user */
+		$user = $this->container->user->createUserFromArray(['name' => 'Teresa Doe', 'email' => 'teresa.doe@test.test']);
+		/** @var Module $module */
+		$module = $this->container->module->createModule('Test module #12', $user->id);
+		/** @var Color $white_color */
+		$white_color = $this->container->module->createColor('White', '000000');
+		/** @var Plate $white_plate */
+		$white_plate = $this->container->module->createPlate(1, 2, 3, 4, 5, $white_color->id, $module->id);
+		/** @var Color $black_color */
+		$black_color = $this->container->module->createColor('Black', 'FFFFFF');
+		$this->assertSame(1, count($module->plates), 'One plate saved');
+
+		$action = new APIModuleAction($this->container);
+		$env = Environment::mock([
+			'REQUEST_METHOD'    => 'PUT',
+			'REQUEST_URI'       => "/api/v1/modules/{$module->id}/plates/{$white_plate->id}/",
+		]);
+		$new_request_body = new \Slim\Http\RequestBody();
+		$new_request_body->write(json_encode(['x' => 31, 'y' => 32, 'z' => 33, 'h' => 34, 'w' => 35, 'color_id' => $black_color->id]));
+		$request = Request::createFromEnvironment($env);
+		$request = $request
+			->withAttribute('token', ['data' => (object) ['id' => $user->id]])
+			->withBody($new_request_body)
+			->withHeader('Content-Type', 'application/json');
+		$response = new \Slim\Http\Response();
+
+		$response = $action->editPlate($request, $response, ['id' => $module->id, 'plate_id' => $white_plate->id]);
+		$this->assertSame(StatusCode::HTTP_OK, $response->getStatusCode());
+		$plate_json = new stdClass();
+		$plate_json->id = 1;
+		$plate_json->x = 31;
+		$plate_json->y = 32;
+		$plate_json->z = 33;
+		$plate_json->h = 34;
+		$plate_json->w = 35;
+		$plate_json->color = new stdClass();
+		$plate_json->color->id = (int) $black_color->id;
+		$plate_json->color->name = $black_color->name;
+		$plate_json->color->hex = $black_color->hex;
+		$this->assertJsonStringEqualsJsonString( json_encode($plate_json), (string) $response->getBody(), 'Plate generated with right data');
+	}
+
+	public function testDELETEModulePlatesWithValidDataReturns200() {
+		/** @var User $user */
+		$user = $this->container->user->createUserFromArray(['name' => 'Ulv Doe', 'email' => 'ulv.doe@test.test']);
+		/** @var Module $module */
+		$module = $this->container->module->createModule('Test module #13', $user->id);
+		/** @var Color $color */
+		$color = $this->container->module->createColor('White', '000000');
+		/** @var Plate $white_plate */
+		$white_plate = $this->container->module->createPlate(1, 2, 3, 4, 5, $color->id, $module->id);
+		$this->assertSame(1, count($module->plates), 'One plate saved');
+
+		$action = new APIModuleAction($this->container);
+		$env = Environment::mock([
+			'REQUEST_METHOD'    => 'DELETE',
+			'REQUEST_URI'       => "/api/v1/modules/{$module->id}/plates/{$white_plate->id}/",
+		]);
+		$request = Request::createFromEnvironment($env);
+		$request = $request
+			->withAttribute('token', ['data' => (object) ['id' => $user->id]])
+			->withHeader('Content-Type', 'application/json');
+		$response = new \Slim\Http\Response();
+
+		$response = $action->deletePlate($request, $response, ['id' => $module->id, 'plate_id' => $white_plate->id]);
+		$this->assertSame(StatusCode::HTTP_OK, $response->getStatusCode());
+		$this->assertEmpty( (string) $response->getBody(), 'DELETE returned no content');
+		$this->assertSame(0, count($module->plates), 'Plate removed from module');
 	}
 }

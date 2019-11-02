@@ -3,6 +3,10 @@
 namespace InfamousQ\LManager\Models;
 
 class APIModuleMapper {
+	/**
+	 * @param Module $module
+	 * @return array
+	 */
 	public static function getJSON($module) {
 		/** @var User $author_user */
 		$author_user = $module->user;
@@ -13,6 +17,7 @@ class APIModuleMapper {
 			'public' => (bool) $module->public,
 			'author' => APIUserMapper::getModuleAuthorSummary($author_user),
 			'created' => $module->created_at->format(\DateTimeInterface::RFC3339),
+			'plates' => APIPlatesMapper::getModulePlatesJSON($module),
 			];
 	}
 

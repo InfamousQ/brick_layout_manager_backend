@@ -5,6 +5,8 @@ namespace InfamousQ\LManager\Models;
 class APIPlatesMapper {
 
 	public static function getJSON(Plate $plate) {
+		/** @var Color $plate_color */
+		$plate_color = $plate->color;
 		return [
 			'id'    => (int) $plate->id,
 			'x'     => $plate->x,
@@ -12,7 +14,7 @@ class APIPlatesMapper {
 			'z'     => $plate->z,
 			'h'     => $plate->h,
 			'w'     => $plate->w,
-			'color' => APIColorMapper::getJSON($plate->color),
+			'color' => APIColorMapper::getJSON($plate_color),
 		];
 	}
 

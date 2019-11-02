@@ -33,8 +33,8 @@ class Module extends \Spot\Entity {
 	public static function relations(MapperInterface $mapper, EntityInterface $entity) {
 		return [
 			'user'      => $mapper->belongsTo($entity, User::class, 'user_id'),
-			'plates'    => $mapper->hasMany($entity, Plate::class, 'module_id'),
-			'layouts'   => $mapper->hasManyThrough($entity, Layout::class, LayoutModule::class, 'layout_id', 'module_id'),
+			'plates'    => $mapper->hasMany($entity, Plate::class, 'module_id')->order(['id' => 'ASC']),
+			'layouts'   => $mapper->hasManyThrough($entity, Layout::class, LayoutModule::class, 'layout_id', 'module_id')->order(['id' => 'ASC']),
 		];
 	}
 }

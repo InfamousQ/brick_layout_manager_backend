@@ -300,4 +300,11 @@ class ModuleService {
 			return false;
 		}
 	}
+
+	/**
+	 * @return \Spot\Query
+	 */
+	public function getColors() {
+		return $this->color_mapper->all()->order(['id' => 'ASC']);
+	}
 }
