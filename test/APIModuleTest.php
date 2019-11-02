@@ -258,11 +258,38 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Invalid token']]), (string) $response->getBody());
 	}
 
-	public function testEditingSingleModuleWithTokenReturns200() {
+	public function testEditingSomeoneElsesModuleWithTokenReturns401() {
+		/** @var User $author_user */
+		$author_user = $this->container->user->createUserFromArray(['name' => 'Gary Doe', 'email' => 'gary.doe@test.test']);
+		/** @var User $active_user */
+		$active_user = $this->container->user->createUserFromArray(['name' => 'Francis Doe', 'email' => 'francis.doe@test.test']);
+		/** @var Module $module */
+		$module = $this->container->module->createModule('Test module #6', $author_user->id);
+
+		$action = new APIModuleAction($this->container);
+		$env = Environment::mock([
+			'REQUEST_METHOD'    => 'PUT',
+			'REQUEST_URI'       => "/api/v1/modules/{$module->id}/",
+		]);
+		$new_request_body = new \Slim\Http\RequestBody();
+		$new_request_body->write(json_encode(['name' => 'Uploaded module #3']));
+		$request = Request::createFromEnvironment($env);
+		$request = $request
+			->withAttribute('token', ['data' => (object) ['id' => $active_user->id]])
+			->withBody($new_request_body)
+			->withHeader('Content-Type', 'application/json');
+		$response = new Response();
+
+		$response = $action->editSingle($request, $response, ['id' => $module->id]);
+		$this->assertSame(StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode());
+		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Can\'t edit someone else\'s module']]), (string) $response->getBody());
+	}
+
+	public function testEditingOwnSingleModuleWithTokenReturns200() {
 		/** @var User $user */
 		$user = $this->container->user->createUserFromArray(['name' => 'Gary Doe', 'email' => 'gary.doe@test.test']);
 		/** @var Module $module */
-		$module = $this->container->module->createModule('Test module #6', $user->id);
+		$module = $this->container->module->createModule('Test module #7', $user->id);
 
 		$action = new APIModuleAction($this->container);
 		$env = Environment::mock([
@@ -357,6 +384,27 @@ class APIModuleTest extends \PHPUnit\Framework\TestCase {
 		$response = $action->deleteSingle($request, $response, ['id' => $module->id]);
 		$this->assertSame(StatusCode::HTTP_UNAUTHORIZED, $response->getStatusCode());
 		$this->assertJsonStringEqualsJsonString( json_encode(['error' => ['message' => 'Not owner']]), (string) $response->getBody());
+	}
+
+	public function testDeletingSingleModuleWithOwnerTokenReturns200() {
+		/** @var User $user */
+		$user = $this->container->user->createUserFromArray(['name' => 'Henry Doe', 'email' => 'henry.doe@test.test']);
+		/** @var Module $module */
+		$module = $this->container->module->createModule('Test module #7.54', $user->id);
+
+		$action = new APIModuleAction($this->container);
+		$env = Environment::mock([
+			'REQUEST_METHOD'    => 'DELETE',
+			'REQUEST_URI'       => "/api/v1/modules/{$module->id}/plates/",
+		]);
+		$request = Request::createFromEnvironment($env);
+		$request = $request->withAttribute('token', ['data' => (object) ['id' => $user->id]]);
+		$response = new \Slim\Http\Response();
+
+		$response = $action->deleteSingle($request, $response, ['id' => $module->id]);
+		$this->assertSame(StatusCode::HTTP_OK, $response->getStatusCode());
+		$this->assertEmpty( (string) $response->getBody(), 'DELETE returned no content');
+		$this->assertNull($this->container->module->getModuleById($module->id), 'Module deleted');
 	}
 
 	public function testFetchingModulesPlatesWithoutTokenReturns401() {

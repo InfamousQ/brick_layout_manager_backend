@@ -96,12 +96,17 @@ class APIModuleAction {
 			return $response->withJson(['error' => ['message' => 'Module not found']], StatusCode::HTTP_NOT_FOUND);
 		}
 
+		$target_module_id = (int) $args['id'];
+		$target_module = $this->module_service->getModuleById($target_module_id);
+
+		if ($target_module->user->id !== $current_user->id) {
+			return $response->withJson(['error' => ['message' => "Can't edit someone else's module"]], StatusCode::HTTP_UNAUTHORIZED);
+		}
+
 		$json_fields = $request->getParsedBody();
 		$allowed_module_field_keys = ['name'];
 		$allowed_json_fields = array_intersect_key($json_fields, array_flip($allowed_module_field_keys));
 
-		$target_module_id = (int) $args['id'];
-		$target_module = $this->module_service->getModuleById($target_module_id);
 		foreach ($allowed_json_fields as $field => $value) {
 			$target_module->$field = $value;
 		}
@@ -138,6 +143,11 @@ class APIModuleAction {
 		if ($target_module->user->id !== $current_user->id) {
 			return $response->withJson(['error' => ['message' => 'Not owner']], StatusCode::HTTP_UNAUTHORIZED);
 		}
+
+		if (!$this->module_service->deleteModuleById($target_module->id)) {
+			return $response->withJson(['error' => ['message' => 'Module deletion failed']], StatusCode::HTTP_BAD_REQUEST);
+		}
+		return $response->withStatus( StatusCode::HTTP_OK);
 	}
 
 	public function fetchPlateList(Request $request, Response $response, array $args = array()) {
