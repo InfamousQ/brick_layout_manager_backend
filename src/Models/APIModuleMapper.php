@@ -13,8 +13,11 @@ class APIModuleMapper {
 		return [
 			'id' => (int) $module->id,
 			'href' => '/api/v1/modules/' . $module->id . '/',
+			'image_href' => '/svg/modules/' . $module->id . '/',
 			'name' => $module->name,
 			'public' => (bool) $module->public,
+			'w' => $module->w,
+			'h' => $module->h,
 			'author' => APIUserMapper::getModuleAuthorSummary($author_user),
 			'created' => $module->created_at->format(\DateTimeInterface::RFC3339),
 			'plates' => APIPlatesMapper::getModulePlatesJSON($module),
@@ -27,6 +30,7 @@ class APIModuleMapper {
 		return [
 			'id' => (int) $module->id,
 			'href' => '/api/v1/modules/' . $module->id . '/',
+			'image_href' => '/svg/modules/' . $module->id . '/',
 			'name' => $module->name,
 			'author' => APIUserMapper::getModuleAuthorSummary($author_user),
 			'created' => $module->created_at->format(\DateTimeInterface::RFC3339),
@@ -37,6 +41,7 @@ class APIModuleMapper {
 		return [
 			'id' => (int) $module->id,
 			'href' => '/api/v1/modules/' . $module->id . '/',
+			'image_href' => '/svg/modules/' . $module->id . '/',
 			'name' => $module->name,
 			'public' => (bool) $module->public,
 			'author' => APIUserMapper::getModuleAuthorSummary($module->user),

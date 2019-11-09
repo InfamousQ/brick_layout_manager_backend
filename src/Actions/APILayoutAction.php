@@ -122,7 +122,7 @@ class APILayoutAction {
 		}
 
 		$json_fields = $request->getParsedBody();
-		$allowed_layout_field_keys = ['name'];
+		$allowed_layout_field_keys = ['name', 'w', 'h'];
 		$allowed_json_fields = array_intersect_key($json_fields, array_flip($allowed_layout_field_keys));
 		foreach ($allowed_json_fields as $field => $value) {
 			$target_layout->$field = $value;

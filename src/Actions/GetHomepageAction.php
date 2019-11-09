@@ -6,8 +6,9 @@ use Slim\Http\Request;
 use Slim\Http\Response;
 
 class GetHomepageAction {
-	/** @var \League\Plates\Engine; $container */
+	/** @var \League\Plates\Engine $view */
 	protected $view;
+
 	// TODO: Create own User model
 	protected $current_profile;
 

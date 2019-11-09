@@ -37,13 +37,15 @@ class ModuleService {
 	 * Create new Layout based on given $name and $user_id
 	 * @param string $name Name for the layout
 	 * @param int $user_id Id of author User
+	 * @param int $width Width of the layout in studs
+	 * @param int $height Height
 	 * @return bool|Layout Created Layout or false
 	 */
-	public function createLayout($name, $user_id) {
+	public function createLayout($name, $user_id, $width = 32, $height = 32) {
 		/** @var Layout $entity */
 		$entity = null;
 		try {
-			$entity = $this->layout_mapper->create(['name' => $name, 'user_id' => $user_id]);
+			$entity = $this->layout_mapper->create(['name' => $name, 'user_id' => $user_id, 'w' => $width, 'h' => $height]);
 			return $entity;
 		} catch (\Exception $exception) {
 			error_log($exception->getMessage());
@@ -145,13 +147,15 @@ class ModuleService {
 	 * Generate Module with given $name and linked to given $user_id
 	 * @param string $name
 	 * @param int $user_id
+	 * @param int $width
+	 * @param int $height
 	 * @return Module|bool Generated Module or false if creation had problems
 	 */
-	public function createModule($name, $user_id) {
+	public function createModule($name, $user_id, $width = 32, $height = 32) {
 		/** @var Module $entity */
 		$entity = null;
 		try {
-			$entity = $this->mapper->create(['name' => $name, 'user_id' => $user_id]);
+			$entity = $this->mapper->create(['name' => $name, 'user_id' => $user_id, 'w' => $width, 'h' => $height]);
 			return $entity;
 		} catch (\Exception $exception) {
 			error_log($exception->getMessage());

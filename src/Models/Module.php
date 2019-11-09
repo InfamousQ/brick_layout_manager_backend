@@ -11,6 +11,8 @@ use Spot\MapperInterface;
  * @property-read int $id
  * @property string $name
  * @property boolean $public
+ * @property int $w
+ * @property int $h
  * @property-read \DateTime $created_at
  * @property-read \DateTime $updated_at
  * @property-read User $user
@@ -25,6 +27,8 @@ class Module extends \Spot\Entity {
 			'user_id'       => ['type' => 'integer', 'required' => true],
 			'name'          => ['type' => 'string', 'required' => true],
 			'public'        => ['type' => 'boolean', 'default' => true],
+			'w'             => ['type' => 'integer', 'default' => 0],
+			'h'             => ['type' => 'integer', 'default' => 0],
 			'created_at'    => ['type' => 'datetime', 'value' => new \DateTime()],
 			'updated_at'    => ['type' => 'datetime', 'value' => new \DateTime()],
 		];

@@ -6,12 +6,13 @@ use Firebase\JWT\JWT;
 use InfamousQ\LManager\Actions\APIColorAction;
 use InfamousQ\LManager\Actions\APILayoutAction;
 use InfamousQ\LManager\Actions\APIModuleAction;
+use InfamousQ\LManager\Actions\APIUserAction;
 use InfamousQ\LManager\Actions\GetHomepageAction;
 use InfamousQ\LManager\Actions\GetPingAction;
 use InfamousQ\LManager\Actions\GetUserAuthenticateAction;
 use InfamousQ\LManager\Actions\GetUserLogoutAction;
 use InfamousQ\LManager\Actions\GetUserTokenAction;
-use InfamousQ\LManager\Actions\APIUserAction;
+use InfamousQ\LManager\Actions\GetSVGAction;
 use InfamousQ\LManager\Services\EntityMapperService;
 use InfamousQ\LManager\Services\HybridAuthService;
 use InfamousQ\LManager\Services\JWTService;
@@ -70,6 +71,7 @@ class App {
 			$renderer->addFolder('home', $base_folder . 'src/Templates/home');
 			$renderer->addFolder('user', $base_folder . 'src/Templates/user');
 			$renderer->addFolder('layout', $base_folder . 'src/Templates/layouts');
+			$renderer->addFolder('svg', $base_folder . 'src/Templates/svg/');
 			return $renderer;
 		};
 
@@ -94,6 +96,11 @@ class App {
 		$this->app->get('/user/token', GetUserTokenAction::class);
 		// User logout
 		$this->app->get('/user/logout', GetUserLogoutAction::class);
+
+		// Get layout svg
+		$this->app->get('/svg/layouts/{id}/', GetSVGAction::class.':generateLayoutSVG');
+		// Get module svg
+		$this->app->get('/svg/modules/{id}/', GetSVGAction::class.':generateModuleSVG');
 
 		// API resources
 		$this->app->group('/api/v1', function () {
