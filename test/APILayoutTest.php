@@ -113,6 +113,7 @@ class APILayoutTest extends \PHPUnit\Framework\TestCase {
 		$layout_json = new stdClass();
 		$layout_json->id = (int) $layout_public_user1->id;
 		$layout_json->href = "/api/v1/layouts/{$layout_public_user1->id}/";
+		$layout_json->image_href = "/svg/layouts/{$layout_public_user1->id}/";
 		$layout_json->name = 'Public layout for user 1';
 		$layout_json->public = $layout_public_user1->public;
 		$layout_json->created = $layout_public_user1->created_at->format(\DateTimeInterface::RFC3339);
@@ -131,7 +132,7 @@ class APILayoutTest extends \PHPUnit\Framework\TestCase {
 		/** @var User $user2 */
 		$user2 = $this->container->user->createUserFromArray(['name' => 'Dennis Doe', 'email' => 'dennis.doe@test.test']);
 		/** @var Layout $layout_private_user1 */
-		$layout_private_user1 = $this->container->module->createLayout('Private layout for user 1', $user1->id);
+		$layout_private_user1 = $this->container->module->createLayout('Private layout for user 1', $user1->id, 64, 20);
 		/** @var Layout $layout_private_user2 */
 		$layout_private_user2 = $this->container->module->createLayout('Private layout for user 2', $user2->id);
 		/** @var Layout $layout_public_user1 */
@@ -154,6 +155,7 @@ class APILayoutTest extends \PHPUnit\Framework\TestCase {
 		$public_layout_json = new stdClass();
 		$public_layout_json->id = (int) $layout_public_user1->id;
 		$public_layout_json->href = "/api/v1/layouts/{$layout_public_user1->id}/";
+		$public_layout_json->image_href = "/svg/layouts/{$layout_public_user1->id}/";
 		$public_layout_json->name = 'Public layout for user 1';
 		$public_layout_json->public = $layout_public_user1->public;
 		$public_layout_json->created = $layout_public_user1->created_at->format(\DateTimeInterface::RFC3339);
@@ -165,6 +167,7 @@ class APILayoutTest extends \PHPUnit\Framework\TestCase {
 		$private_layout_json = new stdClass();
 		$private_layout_json->id = (int) $layout_private_user1->id;
 		$private_layout_json->href = "/api/v1/layouts/{$layout_private_user1->id}/";
+		$private_layout_json->image_href = "/svg/layouts/{$layout_private_user1->id}/";
 		$private_layout_json->name = 'Private layout for user 1';
 		$private_layout_json->public = $layout_private_user1->public;
 		$private_layout_json->created = $layout_private_user1->created_at->format(\DateTimeInterface::RFC3339);
@@ -232,8 +235,11 @@ class APILayoutTest extends \PHPUnit\Framework\TestCase {
 		$layout_json = new stdClass();
 		$layout_json->id = (int) $layout_public->id;
 		$layout_json->href = "/api/v1/layouts/{$layout_public->id}/";
+		$layout_json->image_href = "/svg/layouts/{$layout_public->id}/";
 		$layout_json->name = 'Public layout for user';
 		$layout_json->public = $layout_public->public;
+		$layout_json->w = $layout_public->w;
+		$layout_json->h = $layout_public->h;
 		$layout_json->created = $layout_public->created_at->format(\DateTimeInterface::RFC3339);
 		$layout_json->author = new stdClass();
 		$layout_json->author->id = (int) $user->id;
@@ -263,8 +269,11 @@ class APILayoutTest extends \PHPUnit\Framework\TestCase {
 		$layout_json = new stdClass();
 		$layout_json->id = (int) $layout_private->id;
 		$layout_json->href = "/api/v1/layouts/{$layout_private->id}/";
+		$layout_json->image_href = "/svg/layouts/{$layout_private->id}/";
 		$layout_json->name = 'Private layout for user';
 		$layout_json->public = $layout_private->public;
+		$layout_json->w = $layout_private->w;
+		$layout_json->h = $layout_private->h;
 		$layout_json->created = $layout_private->created_at->format(\DateTimeInterface::RFC3339);
 		$layout_json->author = new stdClass();
 		$layout_json->author->id = (int) $user->id;
@@ -280,7 +289,7 @@ class APILayoutTest extends \PHPUnit\Framework\TestCase {
 		/** @var User $authoring_user */
 		$authoring_user = $this->container->user->createUserFromArray(['name' => 'John Doe', 'email' => 'john.doe@test.test']);
 		/** @var Layout $layout_public */
-		$layout_public = $this->container->module->createLayout('Public layout for authoring user', $authoring_user->id);
+		$layout_public = $this->container->module->createLayout('Public layout for authoring user', $authoring_user->id, 14);
 
 		$action = new APILayoutAction($this->container);
 		$env = Environment::mock([
@@ -296,8 +305,11 @@ class APILayoutTest extends \PHPUnit\Framework\TestCase {
 		$layout_json = new stdClass();
 		$layout_json->id = (int) $layout_public->id;
 		$layout_json->href = "/api/v1/layouts/{$layout_public->id}/";
+		$layout_json->image_href = "/svg/layouts/{$layout_public->id}/";
 		$layout_json->name = 'Public layout for authoring user';
 		$layout_json->public = $layout_public->public;
+		$layout_json->w = $layout_public->w;
+		$layout_json->h = $layout_public->h;
 		$layout_json->created = $layout_public->created_at->format(\DateTimeInterface::RFC3339);
 		$layout_json->author = new stdClass();
 		$layout_json->author->id = (int) $authoring_user->id;
@@ -552,8 +564,11 @@ class APILayoutTest extends \PHPUnit\Framework\TestCase {
 		$layout_json = new stdClass();
 		$layout_json->id = (int) $layout->id;
 		$layout_json->href = "/api/v1/layouts/{$layout->id}/";
+		$layout_json->image_href = "/svg/layouts/{$layout->id}/";
 		$layout_json->name = 'Layout for user';
 		$layout_json->public = $layout->public;
+		$layout_json->w = $layout->w;
+		$layout_json->h = $layout->h;
 		$layout_json->created = $layout->created_at->format(\DateTimeInterface::RFC3339);
 		$layout_json->author = new stdClass();
 		$layout_json->author->id = (int) $user->id;
@@ -607,8 +622,11 @@ class APILayoutTest extends \PHPUnit\Framework\TestCase {
 		$layout_json = new stdClass();
 		$layout_json->id = (int) $layout->id;
 		$layout_json->href = "/api/v1/layouts/{$layout->id}/";
+		$layout_json->image_href = "/svg/layouts/{$layout->id}/";
 		$layout_json->name = 'Layout for active user';
 		$layout_json->public = $layout->public;
+		$layout_json->w = $layout->w;
+		$layout_json->h = $layout->h;
 		$layout_json->created = $layout->created_at->format(\DateTimeInterface::RFC3339);
 		$layout_json->author = new stdClass();
 		$layout_json->author->id = (int) $active_user->id;
@@ -659,8 +677,11 @@ class APILayoutTest extends \PHPUnit\Framework\TestCase {
 		$layout_json = new stdClass();
 		$layout_json->id = (int) $layout->id;
 		$layout_json->href = "/api/v1/layouts/{$layout->id}/";
+		$layout_json->image_href = "/svg/layouts/{$layout->id}/";
 		$layout_json->name = 'Existing layout';
 		$layout_json->public = $layout->public;
+		$layout_json->w = $layout->w;
+		$layout_json->h = $layout->h;
 		$layout_json->created = $layout->created_at->format(\DateTimeInterface::RFC3339);
 		$layout_json->author = new stdClass();
 		$layout_json->author->id = (int) $user->id;
@@ -706,8 +727,11 @@ class APILayoutTest extends \PHPUnit\Framework\TestCase {
 		$layout_json = new stdClass();
 		$layout_json->id = (int)$layout->id;
 		$layout_json->href = "/api/v1/layouts/{$layout->id}/";
+		$layout_json->image_href = "/svg/layouts/{$layout->id}/";
 		$layout_json->name = 'Existing layout';
 		$layout_json->public = $layout->public;
+		$layout_json->w = $layout->w;
+		$layout_json->h = $layout->h;
 		$layout_json->created = $layout->created_at->format(\DateTimeInterface::RFC3339);
 		$layout_json->author = new stdClass();
 		$layout_json->author->id = (int)$user->id;
@@ -743,8 +767,11 @@ class APILayoutTest extends \PHPUnit\Framework\TestCase {
 		$layout_json = new stdClass();
 		$layout_json->id = (int) $layout->id;
 		$layout_json->href = "/api/v1/layouts/{$layout->id}/";
+		$layout_json->image_href = "/svg/layouts/{$layout->id}/";
 		$layout_json->name = 'Burt\'s layout';
 		$layout_json->public = $layout->public;
+		$layout_json->w = $layout->w;
+		$layout_json->h = $layout->h;
 		$layout_json->created = $layout->created_at->format(\DateTimeInterface::RFC3339);
 		$layout_json->author = new stdClass();
 		$layout_json->author->id = (int)$active_user->id;

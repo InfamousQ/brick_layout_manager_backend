@@ -104,7 +104,7 @@ class APIModuleAction {
 		}
 
 		$json_fields = $request->getParsedBody();
-		$allowed_module_field_keys = ['name'];
+		$allowed_module_field_keys = ['name', 'w', 'h'];
 		$allowed_json_fields = array_intersect_key($json_fields, array_flip($allowed_module_field_keys));
 
 		foreach ($allowed_json_fields as $field => $value) {

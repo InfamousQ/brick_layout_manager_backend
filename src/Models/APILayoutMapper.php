@@ -12,9 +12,12 @@ class APILayoutMapper {
 		}
 		return [
 			'id' => (int) $layout->id,
-			'href' => '/api/v1/layouts/' . $layout->id .'/',
+			'href' => '/api/v1/layouts/' . $layout->id . '/',
 			'name' => $layout->name,
+			'image_href' => '/svg/layouts/' . $layout->id . '/',
 			'public' => (bool) $layout->public,
+			'w' => $layout->w,
+			'h' => $layout->h,
 			'author' => APIUserMapper::getLayoutAuthorSummary($author_user),
 			'created' => $layout->created_at->format(\DateTimeInterface::RFC3339),
 			'modules' => $modules,
@@ -30,7 +33,8 @@ class APILayoutMapper {
 		}
 		return [
 			'id' => (int) $layout->id,
-			'href' => '/api/v1/layouts/' . $layout->id .'/',
+			'href' => '/api/v1/layouts/' . $layout->id . '/',
+			'image_href' => '/svg/layouts/' . $layout->id . '/',
 			'name' => $layout->name,
 			'public' => (bool) $layout->public,
 			'author' => APIUserMapper::getLayoutAuthorSummary($author_user),
