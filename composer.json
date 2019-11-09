@@ -29,7 +29,7 @@
       }
     },
     "scripts": {
-        "test": "phpunit"
+        "test": "phpunit test"
     },
     "minimum-stability": "dev",
     "prefer-stable": true
