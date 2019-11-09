@@ -1,6 +1,7 @@
 {
     "name": "infamousq/lmanager",
     "description": "Brick Layout Manager's API",
+    "license": "MIT",
     "type": "project",
     "require": {
         "ext-json": "*",
@@ -26,6 +27,9 @@
       "psr-4": {
         "InfamousQ\\LManager\\": "src"
       }
+    },
+    "scripts": {
+        "test": "phpunit"
     },
     "minimum-stability": "dev",
     "prefer-stable": true
