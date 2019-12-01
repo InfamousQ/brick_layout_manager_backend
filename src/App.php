@@ -157,6 +157,23 @@ class App {
 			'?'.__DIR__.'/../config/db.json',
 			'?'.__DIR__.'/../config/jwt.json',
 		]);
+
+		// Overwrite using defined environment variables
+		$overwriting_env_vars = [
+			'DATABASE_NAME',
+		];
+		$env_vars = [];
+		foreach ($overwriting_env_vars as $env_var) {
+			$tmp = getenv($env_var);
+			if (!empty($tmp)) {
+				$env_vars[$env_var] = $tmp;
+			}
+		}
+
+		foreach ($env_vars as $env_key => $env_value) {
+			$common_config_reader->set($env_key, $env_value);
+		}
+
 		return $common_config_reader->all();
 	}
 
