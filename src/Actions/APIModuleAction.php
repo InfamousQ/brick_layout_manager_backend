@@ -32,6 +32,26 @@ class APIModuleAction {
 		return $response->withJson($result, StatusCode::HTTP_OK);
 	}
 
+	public function fetchListByUser(Request $request, Response $response) {
+		try {
+			$this->getUserDataFromToken($request);
+		} catch (\InvalidArgumentException $e) {
+			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
+		}
+
+		$current_user = $this->user_service->getUserById($this->token_user_data->id);
+		if (null === $current_user) {
+			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
+		}
+
+		$modules = $this->module_service->getModules($current_user->id);
+		$result = [];
+		foreach ($modules as $public_module) {
+			$result[] = APIModuleMapper::getSummaryJSON($public_module);
+		}
+		return $response->withJson($result, StatusCode::HTTP_OK);
+	}
+
 	public function insert(Request $request, Response $response, array $args = []) {
 
 		try {

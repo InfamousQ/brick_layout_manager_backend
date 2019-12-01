@@ -70,7 +70,9 @@ class GetSVGAction {
 			];
 		}
 
-		return $this->view->render('svg::layout', ['layout' => $target_layout, 'module_definitions' => $module_definitions, 'module_usages' => $module_usages]);
+		return $response
+			->withHeader('Content-Type', 'image/svg+xml')
+			->write($this->view->render('svg::layout', ['layout' => $target_layout, 'module_definitions' => $module_definitions, 'module_usages' => $module_usages]));
 	}
 
 	public function generateModuleSVG(Request $request, Response $response, array $args = []) {
@@ -99,6 +101,8 @@ class GetSVGAction {
 			];
 		}
 
-		return $this->view->render('svg::module', ['module' => $target_module, 'plate_rects' => $plate_rects]);
+		return $response
+			->withHeader('Content-Type', 'image/svg+xml')
+			->write($this->view->render('svg::module', ['module' => $target_module, 'plate_rects' => $plate_rects]));
 	}
 }

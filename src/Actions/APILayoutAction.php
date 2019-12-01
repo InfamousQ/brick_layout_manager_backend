@@ -31,12 +31,28 @@ class APILayoutAction {
 			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
 		}
 
+		$layouts = $this->module_service->getPublicLayouts();
+		$result = [];
+		foreach ($layouts as $layout) {
+			$result[] = APILayoutMapper::getSummaryJSON($layout);
+		}
+		return $response->withJson($result);
+	}
+
+	public function fetchListByUser(Request $request, Response $response) {
+
+		try {
+			$this->getUserDataFromToken($request, false);
+		} catch (\InvalidArgumentException $e) {
+			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
+		}
+
 		$current_user = $this->user_service->getUserById($this->token_user_data->id);
 		if (null == $current_user) {
-			$layouts = $this->module_service->getPublicLayouts();
-		} else {
-			$layouts = $this->module_service->getLayouts($current_user->id);
+			return $response->withJson(['error' => ['message' => 'Invalid token']], StatusCode::HTTP_UNAUTHORIZED);
 		}
+
+		$layouts = $this->module_service->getLayouts($current_user->id);
 		$result = [];
 		foreach ($layouts as $layout) {
 			$result[] = APILayoutMapper::getSummaryJSON($layout);

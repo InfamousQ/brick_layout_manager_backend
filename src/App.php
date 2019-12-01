@@ -108,6 +108,8 @@ class App {
 			$this->get('/ping', GetPingAction::class);
 
 			$this->group('/user', function () {
+				$this->get('/modules', APIModuleAction::class.':fetchListByUser');
+				$this->get('/layouts', APILayoutAction::class.':fetchListByUser');
 				$this->get('/providers', APIUserAction::class.':providers');
 				$this->get('/[{id}]', APIUserAction::class.':fetch');
 				$this->post('/{id}', APIUserAction::class.':update');

@@ -207,6 +207,17 @@ class ModuleService {
 		return $public_modules;
 	}
 
+	/**
+	 *
+	 * @param int $user_id
+	 * @return Collection
+	 */
+	public function getModules($user_id) {
+		/** @var Collection $public_modules */
+		$public_modules = $this->mapper->select()->where(['user_id' => (int) $user_id])->order(['updated_at' => 'DESC'])->execute();
+		return $public_modules;
+	}
+
 	// Plate functions
 
 	/**

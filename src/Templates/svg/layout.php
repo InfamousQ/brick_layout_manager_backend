@@ -6,8 +6,8 @@
 	<defs>
 		<!-- Grid -->
 		<symbol id="module-grid" viewBox="0 0 32 32">
-			<rect x="0" y="0" width="32" height="32" fill="black"></rect>
-			<rect x="1" y="1" width="30" height="30" fill="white"></rect>
+			<rect x="0" y="0" width="32" height="32" fill="white" stroke="black" stroke-width="1" stroke-opacity="0.2" />
+			<!-- <rect x="1" y="1" width="30" height="30" fill="white"></rect> -->
 		</symbol>
 		<pattern id="module-grid-pattern" x="0" y="0" width="1" height="1" patternUnits="userSpaceOnUse">
 			<use x="0" y="0" width="1" height="1" xlink:href="#module-grid" />
