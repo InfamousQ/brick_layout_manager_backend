@@ -4,11 +4,24 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Docker build
+        run: docker build .
 
+    env:
+      DB_HOST: db
+      DB_NAME: lmanager_test
+      DB_PORT: 5432
+      DB_USER: bl_admin
+      DB_PASS: test
+
+  test:
+    runs-on: ubuntu-latest
     services:
-      postgres:
+      db:
         image: postgres:alpine
         env:
           POSTGRES_USER: postgres
@@ -31,7 +44,7 @@ jobs:
       run: composer run-script test
 
     env:
-      DB_HOST: postgres
+      DB_HOST: db
       DB_NAME: lmanager_test
       DB_PORT: 5432
       DB_USER: bl_admin
