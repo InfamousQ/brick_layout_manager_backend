@@ -4,14 +4,14 @@ on:
   push:
     # Publish `master` as Docker `latest` image.
     branches:
-      - master
+    #  - master
 
     # Publish `v1.2.3` tags as releases.
-    tags:
-      - v*
+    #tags:
+     # - v*
 
   # Run tests for any PRs.
-  pull_request:
+  # pull_request:
 
 env:
   IMAGE_NAME: lmanager
