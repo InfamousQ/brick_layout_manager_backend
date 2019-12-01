@@ -36,7 +36,8 @@ services:
       - db
       - composer
     volumes:
-      - ./backend:/var/www/html/
+      - ./.deploy:/etc/apache2/ssl
+      - .:/var/www/html
     ports:
       - "80:80"
       - "443:443"

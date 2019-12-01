@@ -7,8 +7,8 @@ RUN apt-get update && \
     docker-php-ext-install pdo_pgsql
 
 # Certs
-ADD .certs/server.crt /etc/apache2/ssl/server.crt
-ADD .certs/server.key /etc/apache2/ssl/server.key
+# ADD .certs/server.crt /etc/apache2/ssl/server.crt
+# ADD .certs/server.key /etc/apache2/ssl/server.key
 
 # Apache config
 ADD .deploy/apache-config.conf /etc/apache2/sites-enabled/000-default.conf
