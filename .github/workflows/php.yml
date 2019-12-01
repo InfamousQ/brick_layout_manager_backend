@@ -10,8 +10,12 @@ jobs:
     services:
       postgres:
         image: postgres:alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
         ports:
-          - 5432/tcp
+          - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
@@ -29,6 +33,6 @@ jobs:
     env:
       DB_HOST: postgres
       DB_NAME: lmanager_test
-      DB_PORT: 5432
+      DB_PORT: ${{ job.services.postgres.ports[5432] }}
       DB_USER: bl_admin
       DB_PASS: test
