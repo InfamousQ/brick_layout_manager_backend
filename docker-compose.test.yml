@@ -30,7 +30,7 @@ services:
       frontend:
         ipv4_address: 192.168.0.6
     build:
-      context: ./backend
+      context: .
     working_dir: /var/www/html
     depends_on:
       - db
