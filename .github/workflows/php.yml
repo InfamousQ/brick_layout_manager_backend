@@ -10,11 +10,7 @@ jobs:
     services:
       postgres:
         image: postgres:alpine
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
     - uses: actions/checkout@v1
@@ -31,6 +27,6 @@ jobs:
     env:
       DB_HOST: postgres
       DB_NAME: lmanager_test
-      DB_PORT: 5432
+      DB_PORT: ${{ job.services.postgres.ports['5432'] }}
       DB_USER: bl_admin
       DB_PASS: test
