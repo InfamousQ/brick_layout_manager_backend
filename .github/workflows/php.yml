@@ -29,6 +29,6 @@ jobs:
     env:
       DB_HOST: postgres
       DB_NAME: lmanager_test
-      DB_PORT: ${{ jobs.services.postgres.ports['5432'] }}
+      DB_PORT: ${{ jobs.build.services.postgres.ports['5432'] }}
       DB_USER: bl_admin
       DB_PASS: test
