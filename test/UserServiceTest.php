@@ -19,11 +19,11 @@ class UserServiceTest extends \PHPUnit\Framework\TestCase {
 		self::$T->getMigrate("test");
 
 		$db_settings = [
-			'host' => 'bl_db',
-			'port' => 5432,
-			'dbname' => 'lmanager_test',
-			'user' => getenv('PHINX_TEST_DB_USER'),
-			'password' => getenv('PHINX_TEST_DB_PASS'),
+			'host' => getenv('DB_HOST'),
+			'port' => getenv('DB_PORT'),
+			'dbname' => getenv('DB_NAME'),
+			'user' => getenv('DB_USER'),
+			'password' => getenv('DB_PASS'),
 		];
 		$test_mapper_service = new \InfamousQ\LManager\Services\EntityMapperService($db_settings);
 		$this->user_service = new UserService($test_mapper_service);

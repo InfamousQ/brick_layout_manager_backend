@@ -28,11 +28,11 @@ class APILayoutTest extends \PHPUnit\Framework\TestCase {
 		$container = new \Slim\Container();
 		$container['settings'] = [
 			'db' => [
-				'host' => 'bl_db',
-				'port' => 5432,
-				'dbname' => 'lmanager_test',
-				'user' => 'bl_test',
-				'password' => 'test',
+				'host' => getenv('DB_HOST'),
+				'port' => getenv('DB_PORT'),
+				'dbname' => getenv('DB_NAME'),
+				'user' => getenv('DB_USER'),
+				'password' => getenv('DB_PASS'),
 			],
 			'social' => [
 				'callback' => 'www.dummy.test',
