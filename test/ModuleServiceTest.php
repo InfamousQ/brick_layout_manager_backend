@@ -14,7 +14,7 @@ class ModuleServiceTest extends \PHPUnit\Framework\TestCase {
 		$app->setAutoExit(false);
 
 		self::$T = new \Phinx\Wrapper\TextWrapper($app);
-		self::$T->setOption('configuration', '.deploy/phinx.php');
+		self::$T->setOption('configuration', '.deploy/php/phinx.php');
 		self::$T->getMigrate("test");
 
 		$db_settings = [
@@ -30,7 +30,7 @@ class ModuleServiceTest extends \PHPUnit\Framework\TestCase {
 	}
 
 	public function tearDown(){
-		self::$T->setOption('configuration', '.deploy/phinx.php');
+		self::$T->setOption('configuration', '.deploy/php/phinx.php');
 		self::$T->getRollback("test", 0);
 	}
 

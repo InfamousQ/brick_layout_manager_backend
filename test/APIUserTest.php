@@ -17,7 +17,7 @@ class APIUserTest extends \PHPUnit\Framework\TestCase {
 		$app->setAutoExit(false);
 		$app->run(new \Symfony\Component\Console\Input\StringInput(' '), new \Symfony\Component\Console\Output\NullOutput());
 
-		self::$T = new \Phinx\Wrapper\TextWrapper($app, array('configuration' => '.deploy/phinx.php'));
+		self::$T = new \Phinx\Wrapper\TextWrapper($app, array('configuration' => '.deploy/php/phinx.php'));
 		self::$T->getMigrate("test");
 
 		$container = new \Slim\Container();

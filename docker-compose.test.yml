@@ -1,22 +1,16 @@
 version: '3'
 
-networks:
-  frontend:
-    ipam:
-      config:
-        - subnet: 192.168.0.0/24
-
 services:
   db:
     image: "postgres:alpine"
+    restart: always
     container_name: bl_db
-    networks:
-      frontend:
-        ipv4_address: 192.168.0.5
     ports:
       - "5432:5432"
     env_file:
-      - .deploy/db.env
+      - .deploy/db/db.env
+    volumes:
+      - .deploy/db/init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -26,29 +20,16 @@ services:
   backend:
     container_name: bl_backend
     hostname: api.lmanager.test
-    networks:
-      frontend:
-        ipv4_address: 192.168.0.6
     build:
       context: .
     working_dir: /var/www/html
     depends_on:
       - db
-      - composer
     volumes:
-      - ./.deploy:/etc/apache2/ssl
       - .:/var/www/html
     ports:
       - "80:80"
       - "443:443"
     env_file:
-      - .deploy/backend.env
-    command: ./vendor/bin/phpunit test
-
-  composer:
-    container_name: bl_composer
-    image: composer
-    working_dir: /var/www/html
-    command: install
-    volumes:
-      - ./backend:/var/www/html
+      - .deploy/apache/backend.env
+    #command: ./vendor/bin/phpunit test

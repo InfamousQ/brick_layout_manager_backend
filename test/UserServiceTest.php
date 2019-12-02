@@ -15,7 +15,7 @@ class UserServiceTest extends \PHPUnit\Framework\TestCase {
 		$app->setAutoExit(false);
 
 		self::$T = new TextWrapper($app);
-		self::$T->setOption('configuration', '.deploy/phinx.php');
+		self::$T->setOption('configuration', '.deploy/php/phinx.php');
 		self::$T->getMigrate("test");
 
 		$db_settings = [
