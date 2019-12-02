@@ -32,4 +32,4 @@ services:
       - "443:443"
     env_file:
       - .deploy/apache/backend.env
-    command: composer test
+    command: /usr/bin/composer test
