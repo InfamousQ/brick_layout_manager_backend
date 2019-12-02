@@ -33,4 +33,3 @@ CMD service apache2 reload
 # Composer - install
 CMD /usr/bin/composer install
 #CMD /usr/sbin/apache2ctl -D FOREGROUND
-CMD /usr/bin/composer test
