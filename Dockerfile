@@ -30,6 +30,8 @@ RUN echo "ServerName dev.lmanager.test" >> /etc/apache2/conf-available/servernam
 RUN a2enconf servername
 
 # Composer - install
+RUN pwd
+RUN ls -la
 RUN /usr/bin/composer install
 CMD ["/usr/sbin/apachectl", "-D", "FOREGROUND"]
 #CMD /usr/sbin/apache2ctl -D FOREGROUND
