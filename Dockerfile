@@ -22,14 +22,14 @@ RUN a2enmod headers
 RUN a2enmod ssl
 
 # PHP ini
-CMD cp /usr/local/etc/php/php.ini-development /usr/local/etc/php/php.ini
+RUN cp /usr/local/etc/php/php.ini-development /usr/local/etc/php/php.ini
 ADD .deploy/apache/php-dev.ini /usr/local/etc/php/conf.d/xx_lmanager.ini
 
 # Servername config
-CMD echo "ServerName dev.lmanager.test" >> /etc/apache2/conf-available/servername.conf
-CMD a2enconf servername
-CMD service apache2 reload
+RUN echo "ServerName dev.lmanager.test" >> /etc/apache2/conf-available/servername.conf
+RUN a2enconf servername
+RUN service apache2 reload
 
 # Composer - install
-CMD /usr/bin/composer install
+RUN /usr/bin/composer install
 #CMD /usr/sbin/apache2ctl -D FOREGROUND
