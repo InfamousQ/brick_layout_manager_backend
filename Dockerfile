@@ -28,8 +28,8 @@ ADD .deploy/apache/php-dev.ini /usr/local/etc/php/conf.d/xx_lmanager.ini
 # Servername config
 RUN echo "ServerName dev.lmanager.test" >> /etc/apache2/conf-available/servername.conf
 RUN a2enconf servername
-RUN service apache2 reload
 
 # Composer - install
 RUN /usr/bin/composer install
+CMD ["/usr/sbin/apachectl", "-D", "FOREGROUND"]
 #CMD /usr/sbin/apache2ctl -D FOREGROUND
