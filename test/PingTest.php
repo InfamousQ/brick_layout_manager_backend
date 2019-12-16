@@ -4,12 +4,12 @@ use InfamousQ\LManager\App;
 use Slim\Http\Environment;
 use Slim\Http\Request;
 
-class PingTest extends PHPUnit_Framework_TestCase {
+class PingTest extends \PHPUnit\Framework\TestCase {
 
     /** @var Slim\App Current instance of Slim application */
     protected $app;
 
-    public function setUp() {
+    public function setUp(): void {
         $this->app = (new App())->getSlim();
     }
 

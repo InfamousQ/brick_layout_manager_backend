@@ -17,7 +17,7 @@ class APILayoutTest extends \PHPUnit\Framework\TestCase {
 	/** @var \Slim\Container $container */
 	protected $container;
 
-	protected function setUp() {
+	protected function setUp(): void {
 		$app = new \Phinx\Console\PhinxApplication();
 		$app->setAutoExit(false);
 		$app->run(new \Symfony\Component\Console\Input\StringInput(' '), new \Symfony\Component\Console\Output\NullOutput());
@@ -65,7 +65,7 @@ class APILayoutTest extends \PHPUnit\Framework\TestCase {
 		$this->container = $container;
 	}
 
-	public function tearDown(){
+	public function tearDown(): void {
 		self::$T->getRollback("test", "0");
 		$this->container->entity->closeConnectionToDB();
 	}

@@ -10,7 +10,7 @@ class UserServiceTest extends \PHPUnit\Framework\TestCase {
 	/** @var UserService $user_service */
 	protected $user_service;
 
-	public function setUp(){
+	public function setUp(): void{
 		$app = new \Phinx\Console\PhinxApplication();
 		$app->setAutoExit(false);
 
@@ -29,7 +29,7 @@ class UserServiceTest extends \PHPUnit\Framework\TestCase {
 		$this->user_service = new UserService($test_mapper_service);
 	}
 
-	public function tearDown(){
+	public function tearDown(): void {
 		self::$T->getRollback("test", 0);
 	}
 

@@ -12,7 +12,7 @@ class APIUserTest extends \PHPUnit\Framework\TestCase {
 	/** @var \Slim\Container $container */
 	protected $container;
 
-	protected function setUp() {
+	protected function setUp(): void{
 		$app = new \Phinx\Console\PhinxApplication();
 		$app->setAutoExit(false);
 		$app->run(new \Symfony\Component\Console\Input\StringInput(' '), new \Symfony\Component\Console\Output\NullOutput());
@@ -60,7 +60,7 @@ class APIUserTest extends \PHPUnit\Framework\TestCase {
 		$this->container = $container;
 	}
 
-	public function tearDown(){
+	public function tearDown(): void {
 		self::$T->getRollback("test", "0");
 		$this->container->entity->closeConnectionToDB();
 	}
@@ -98,7 +98,7 @@ class APIUserTest extends \PHPUnit\Framework\TestCase {
 
 		$response = $action->fetch($request, $response, []);
 		$this->assertSame(\Slim\Http\StatusCode::HTTP_OK, $response->getStatusCode());
-		$this->assertJsonStringEqualsJsonString(json_encode(['id' => $new_user->id, 'name' => 'John Doe', 'href' => "/api/v1/users/{$new_user->id}/", 'modules' => [], 'layouts' => []]), (string) $response->getBody());
+		$this->assertJsonStringEqualsJsonString(json_encode(['id' => (int) $new_user->id, 'name' => 'John Doe', 'href' => "/api/v1/users/{$new_user->id}/", 'modules' => [], 'layouts' => []]), (string) $response->getBody());
 	}
 
 	public function testWithoutValidUserDataOthersDataReturns401() {
@@ -147,7 +147,7 @@ class APIUserTest extends \PHPUnit\Framework\TestCase {
 
 		$response = $action->fetch($request, $response, ['id' => $existing_user->id]);
 		$this->assertSame(\Slim\Http\StatusCode::HTTP_OK, $response->getStatusCode());
-		$this->assertJsonStringEqualsJsonString(json_encode(['id' => $existing_user->id, 'name' => 'James Doe', 'href' => "/api/v1/users/{$existing_user->id}/", 'modules' => [], 'layouts' => []]), (string) $response->getBody());
+		$this->assertJsonStringEqualsJsonString(json_encode(['id' => (int) $existing_user->id, 'name' => 'James Doe', 'href' => "/api/v1/users/{$existing_user->id}/", 'modules' => [], 'layouts' => []]), (string) $response->getBody());
 	}
 
 	public function testUpdatingUserWhenNoTokenPresentReturns401() {
@@ -229,7 +229,7 @@ class APIUserTest extends \PHPUnit\Framework\TestCase {
 
 		$response = $action->update($request, $response, ['id' => $existing_user->id]);
 		$this->assertSame(\Slim\Http\StatusCode::HTTP_OK, $response->getStatusCode());
-		$this->assertJsonStringEqualsJsonString(json_encode(['id' => $existing_user->id, 'name' => 'Aaron "Test guy" Doe', 'href' => "/api/v1/users/{$existing_user->id}/", 'modules' => [], 'layouts' => []]), (string) $response->getBody());
+		$this->assertJsonStringEqualsJsonString(json_encode(['id' => (int) $existing_user->id, 'name' => 'Aaron "Test guy" Doe', 'href' => "/api/v1/users/{$existing_user->id}/", 'modules' => [], 'layouts' => []]), (string) $response->getBody());
 	}
 
 	public function testGetAvailableUsersReturns200() {

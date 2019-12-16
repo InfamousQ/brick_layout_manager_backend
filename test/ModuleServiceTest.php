@@ -9,7 +9,7 @@ class ModuleServiceTest extends \PHPUnit\Framework\TestCase {
 	/** @var \InfamousQ\LManager\Services\UserService */
 	protected $user_service;
 
-	public function setUp() {
+	public function setUp(): void {
 		$app = new \Phinx\Console\PhinxApplication();
 		$app->setAutoExit(false);
 
@@ -29,7 +29,7 @@ class ModuleServiceTest extends \PHPUnit\Framework\TestCase {
 		$this->user_service = new \InfamousQ\LManager\Services\UserService($mapper_service);
 	}
 
-	public function tearDown(){
+	public function tearDown(): void {
 		self::$T->setOption('configuration', '.deploy/php/phinx.php');
 		self::$T->getRollback("test", 0);
 	}

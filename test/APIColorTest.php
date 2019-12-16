@@ -15,7 +15,7 @@ class APIColorTest extends \PHPUnit\Framework\TestCase {
 	/** @var \Slim\Container $container */
 	protected $container;
 
-	protected function setUp() {
+	protected function setUp(): void {
 		$app = new \Phinx\Console\PhinxApplication();
 		$app->setAutoExit(false);
 		$app->run(new \Symfony\Component\Console\Input\StringInput(' '), new \Symfony\Component\Console\Output\NullOutput());
@@ -55,9 +55,10 @@ class APIColorTest extends \PHPUnit\Framework\TestCase {
 			return new \InfamousQ\LManager\Services\ModuleService($container->get('entity'));
 		};
 		$this->container = $container;
+		return;
 	}
 
-	public function tearDown(){
+	public function tearDown(): void {
 		self::$T->getRollback("test", "0");
 		$this->container->entity->closeConnectionToDB();
 	}
@@ -79,11 +80,11 @@ class APIColorTest extends \PHPUnit\Framework\TestCase {
 		$response = $action->fetchList($request, $response);
 		$this->assertSame(StatusCode::HTTP_OK, $response->getStatusCode());
 		$red_color_json = new stdClass();
-		$red_color_json->id = $red_color->id;
+		$red_color_json->id = (int) $red_color->id;
 		$red_color_json->name = $red_color->name;
 		$red_color_json->hex = $red_color->hex;
 		$blue_color_json = new stdClass();
-		$blue_color_json->id = $blue_color->id;
+		$blue_color_json->id = (int) $blue_color->id;
 		$blue_color_json->name = $blue_color->name;
 		$blue_color_json->hex = $blue_color->hex;
 		$this->assertJsonStringEqualsJsonString( json_encode([$red_color_json, $blue_color_json]), (string) $response->getBody(), 'Color list is correct');
