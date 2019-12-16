@@ -4,7 +4,7 @@ FROM php:7.2-apache
 # Install Postgres PDO
 RUN apt-get update && \
     apt-get install -y libpq-dev && \
-    apt-get install -y --no-install-recommends git zip && \
+    apt-get install -y --no-install-recommends git zip unzip && \
     docker-php-ext-install pdo_pgsql
 
 COPY . /var/www/html
@@ -35,5 +35,5 @@ RUN echo "ServerName dev.lmanager.test" >> /etc/apache2/conf-available/servernam
 RUN a2enconf servername
 
 # Composer - install
-RUN /usr/bin/composer install
+RUN /usr/bin/composer install --no-suggest --prefer-dist
 CMD /usr/sbin/apache2ctl -D FOREGROUND
