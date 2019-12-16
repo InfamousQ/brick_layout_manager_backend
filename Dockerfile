@@ -6,6 +6,10 @@ RUN apt-get update && \
     apt-get install -y libpq-dev && \
     docker-php-ext-install pdo_pgsql
 
+COPY . /var/www/html
+
+WORKDIR /var/www/html
+
 # Copy composer
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 
@@ -30,8 +34,5 @@ RUN echo "ServerName dev.lmanager.test" >> /etc/apache2/conf-available/servernam
 RUN a2enconf servername
 
 # Composer - install
-RUN pwd
-RUN ls -la
 RUN /usr/bin/composer install
-CMD ["/usr/sbin/apachectl", "-D", "FOREGROUND"]
-#CMD /usr/sbin/apache2ctl -D FOREGROUND
+CMD /usr/sbin/apache2ctl -D FOREGROUND
